@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>שירה בצבעים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #0d0b18;
+  --surface: #16132a;
+  --line:    #24204a;
+  --dim:     #44406a;
+  --muted:   #7a759a;
+  --text:    #e8e4ff;
+
+  --c0: #5ef0a0;  --c0d: #0d2a1e;  --c0r: 94,240,160;
+  --c1: #5ec8f0;  --c1d: #0a1e2c;  --c1r: 94,200,240;
+  --c2: #ffcf55;  --c2d: #2a1e04;  --c2r: 255,207,85;
+  --c3: #ff6b6b;  --c3d: #2a0a0a;  --c3r: 255,107,107;
+  --c4: #c47bff;  --c4d: #1c0a2e;  --c4r: 196,123,255;
+  --c5: #ff9de2;  --c5d: #2a0a1c;  --c5r: 255,157,226;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══════════ START SCREEN ═══════════ */
+#start {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 22px; padding: 36px;
+  z-index: 300;
+  transition: opacity 0.5s;
+}
+#start.out { opacity: 0; pointer-events: none; }
+
+.start-bounce {
+  font-size: 64px;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+#start h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 48px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--c0) 0%, var(--c1) 40%, var(--c4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.15;
+}
+
+#start p {
+  font-size: 15px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.75;
+  max-width: 270px;
+}
+
+.start-modes {
+  display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px;
+}
+
+.mode-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 14px; font-weight: 700;
+}
+.mode-row span { font-size: 22px; }
+
+.start-row { display: flex; gap: 12px; margin-top: 4px; }
+
+.start-btn {
+  padding: 16px 40px;
+  border: none; border-radius: 50px;
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 18px; font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.start-btn:active { transform: scale(0.94); }
+.start-btn.primary {
+  background: var(--c0);
+  color: #041409;
+  box-shadow: 0 0 40px rgba(var(--c0r), 0.35);
+}
+.start-btn.secondary {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--line);
+  font-size: 14px;
+}
+
+/* ═══════════ MAIN GAME ═══════════ */
+#app {
+  display: flex; flex-direction: column;
+  height: 100dvh; height: 100vh;
+  max-width: 460px; margin: 0 auto;
+}
+
+/* Header */
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 10px;
+  flex-shrink: 0;
+}
+
+#hearts { display: flex; gap: 5px; font-size: 20px; }
+
+#score-wrap {
+  display: flex; align-items: baseline; gap: 6px;
+}
+#score {
+  font-family: 'Fredoka One', cursive;
+  font-size: 30px;
+  color: var(--c2);
+  text-shadow: 0 0 20px rgba(var(--c2r), 0.5);
+  line-height: 1;
+}
+#streak-badge {
+  font-size: 12px; font-weight: 900;
+  color: var(--c3);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#streak-badge.show { opacity: 1; }
+
+/* Timer */
+#timer-wrap { flex-shrink: 0; height: 4px; margin: 0 0 4px; background: var(--line); }
+#timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c1), var(--c4));
+  transform-origin: right;
+  transition: width linear;
+}
+
+/* Task area */
+#task-area {
+  flex-shrink: 0;
+  padding: 8px 18px 6px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  min-height: 110px;
+  justify-content: center;
+}
+
+#task-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--dim);
+  padding: 3px 12px; border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+#task-text {
+  font-size: 18px; font-weight: 700;
+  text-align: center; line-height: 1.4;
+  color: var(--text); white-space: pre-line;
+}
+
+#listen-btn {
+  display: flex; align-items: center; gap: 9px;
+  background: rgba(var(--c1r), 0.1);
+  border: 1.5px solid rgba(var(--c1r), 0.25);
+  border-radius: 50px; padding: 10px 20px;
+  color: var(--c1);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s;
+}
+#listen-btn:active { transform: scale(0.95); }
+#listen-btn.playing { background: rgba(var(--c1r), 0.2); border-color: rgba(var(--c1r), 0.6); }
+#listen-btn.hidden { display: none; }
+
+.lb-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--c1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; flex-shrink: 0;
+}
+#listen-btn.playing .lb-icon { background: var(--c1); color: #001420; }
+
+/* Melody dots */
+#mdots {
+  display: flex; gap: 8px; height: 16px; align-items: center;
+}
+.mdot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--line);
+  transition: all 0.2s;
+}
+.mdot.current { background: transparent; border: 2px solid var(--c1); animation: mdot-pulse 0.7s infinite; }
+.mdot.hit     { background: var(--c0); transform: scale(1.3); }
+.mdot.miss    { background: var(--c3); transform: scale(1.3); }
+@keyframes mdot-pulse {
+  50% { border-color: rgba(var(--c1r), 0.3); transform: scale(1.15); }
+}
+
+/* ═══════════ SINGING OVERLAY ═══════════ */
+#sing-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10, 8, 20, 0.97);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+#sing-overlay.active { opacity: 1; pointer-events: all; }
+
+#sing-target-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 52px;
+  text-align: center;
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+#sing-target-note {
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  color: var(--muted); margin-bottom: 24px;
+}
+
+/* Pitch meter - vertical */
+#pitch-meter {
+  width: 64px;
+  height: 260px;
+  position: relative;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 32px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+#pitch-zone {
+  position: absolute;
+  left: 0; right: 0;
+  /* centered around 50% height */
+  height: 26%;
+  top: 37%;
+  background: rgba(var(--c0r), 0.15);
+  border-top: 2px solid rgba(var(--c0r), 0.5);
+  border-bottom: 2px solid rgba(var(--c0r), 0.5);
+}
+
+#pitch-cursor {
+  position: absolute;
+  left: 8px; right: 8px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--c1);
+  top: 50%;
+  transform: translateY(-50%);
+  transition: top 0.06s ease-out, background 0.15s;
+  box-shadow: 0 0 18px currentColor;
+}
+
+#sing-feedback {
+  font-size: 20px; font-weight: 900;
+  text-align: center;
+  height: 28px;
+  letter-spacing: 0.3px;
+  transition: color 0.15s;
+}
+#sing-feedback.ok   { color: var(--c0); }
+#sing-feedback.high { color: var(--c3); }
+#sing-feedback.low  { color: var(--c1); }
+#sing-feedback.none { color: var(--dim); }
+
+#sing-hold-ring {
+  width: 90px; height: 90px; border-radius: 50%;
+  border: 3px solid rgba(var(--c0r), 0.2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  margin-top: 16px;
+}
+
+#sing-hold-arc {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--c0);
+  opacity: 0;
+  animation: none;
+}
+@keyframes arc-spin { to { transform: rotate(360deg); } }
+
+#sing-hold-pct {
+  font-family: 'Fredoka One', cursive;
+  font-size: 26px;
+  color: var(--c0);
+}
+
+#sing-close-btn {
+  position: absolute; top: 20px; left: 20px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--muted);
+  cursor: pointer;
+}
+
+/* ═══════════ PADS ═══════════ */
+#grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 9px;
+  padding: 6px 14px 20px;
+}
+
+.pad {
+  border-radius: 24px;
+  border: 1.5px solid transparent;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.07s, box-shadow 0.12s;
+  will-change: transform;
+}
+
+.pad-sol  {
+  font-family: 'Fredoka One', cursive;
+  font-size: 22px;
+  pointer-events: none;
+  position: relative; z-index: 1;
+  transition: color 0.1s;
+}
+.pad-note {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  pointer-events: none; position: relative; z-index: 1;
+  opacity: 0.6; transition: color 0.1s;
+}
+
+/* Ripple */
+.rpl {
+  position: absolute; border-radius: 50%;
+  transform: scale(0);
+  animation: rpl-out 0.5s ease-out forwards;
+  pointer-events: none; opacity: 0.3;
+}
+@keyframes rpl-out { to { transform: scale(5); opacity: 0; } }
+
+/* Per-pad colors */
+.pad[data-i="0"] { background: rgba(var(--c0r),0.08); border-color: rgba(var(--c0r),0.2); }
+.pad[data-i="0"] .pad-sol  { color: var(--c0); }
+.pad[data-i="0"].active    { background: var(--c0); transform: scale(0.93); border-color: var(--c0); box-shadow: 0 0 0 3px var(--c0), 0 0 50px rgba(var(--c0r),0.4); }
+.pad[data-i="0"].active .pad-sol { color: var(--c0d); }
+.pad[data-i="0"].active .pad-note { color: var(--c0d); }
+.pad[data-i="0"].hint { box-shadow: 0 0 0 4px var(--c0), 0 0 40px rgba(var(--c0r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="0"] .rpl { background: var(--c0); }
+
+.pad[data-i="1"] { background: rgba(var(--c1r),0.08); border-color: rgba(var(--c1r),0.2); }
+.pad[data-i="1"] .pad-sol  { color: var(--c1); }
+.pad[data-i="1"].active    { background: var(--c1); transform: scale(0.93); border-color: var(--c1); box-shadow: 0 0 0 3px var(--c1), 0 0 50px rgba(var(--c1r),0.4); }
+.pad[data-i="1"].active .pad-sol { color: var(--c1d); }
+.pad[data-i="1"].active .pad-note { color: var(--c1d); }
+.pad[data-i="1"].hint { box-shadow: 0 0 0 4px var(--c1), 0 0 40px rgba(var(--c1r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="1"] .rpl { background: var(--c1); }
+
+.pad[data-i="2"] { background: rgba(var(--c2r),0.08); border-color: rgba(var(--c2r),0.2); }
+.pad[data-i="2"] .pad-sol  { color: var(--c2); }
+.pad[data-i="2"].active    { background: var(--c2); transform: scale(0.93); border-color: var(--c2); box-shadow: 0 0 0 3px var(--c2), 0 0 50px rgba(var(--c2r),0.4); }
+.pad[data-i="2"].active .pad-sol { color: var(--c2d); }
+.pad[data-i="2"].active .pad-note { color: var(--c2d); }
+.pad[data-i="2"].hint { box-shadow: 0 0 0 4px var(--c2), 0 0 40px rgba(var(--c2r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="2"] .rpl { background: var(--c2); }
+
+.pad[data-i="3"] { background: rgba(var(--c3r),0.08); border-color: rgba(var(--c3r),0.2); }
+.pad[data-i="3"] .pad-sol  { color: var(--c3); }
+.pad[data-i="3"].active    { background: var(--c3); transform: scale(0.93); border-color: var(--c3); box-shadow: 0 0 0 3px var(--c3), 0 0 50px rgba(var(--c3r),0.4); }
+.pad[data-i="3"].active .pad-sol { color: var(--c3d); }
+.pad[data-i="3"].active .pad-note { color: var(--c3d); }
+.pad[data-i="3"].hint { box-shadow: 0 0 0 4px var(--c3), 0 0 40px rgba(var(--c3r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="3"] .rpl { background: var(--c3); }
+
+.pad[data-i="4"] { background: rgba(var(--c4r),0.08); border-color: rgba(var(--c4r),0.2); }
+.pad[data-i="4"] .pad-sol  { color: var(--c4); }
+.pad[data-i="4"].active    { background: var(--c4); transform: scale(0.93); border-color: var(--c4); box-shadow: 0 0 0 3px var(--c4), 0 0 50px rgba(var(--c4r),0.4); }
+.pad[data-i="4"].active .pad-sol { color: var(--c4d); }
+.pad[data-i="4"].active .pad-note { color: var(--c4d); }
+.pad[data-i="4"].hint { box-shadow: 0 0 0 4px var(--c4), 0 0 40px rgba(var(--c4r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="4"] .rpl { background: var(--c4); }
+
+.pad[data-i="5"] { background: rgba(var(--c5r),0.08); border-color: rgba(var(--c5r),0.2); }
+.pad[data-i="5"] .pad-sol  { color: var(--c5); }
+.pad[data-i="5"].active    { background: var(--c5); transform: scale(0.93); border-color: var(--c5); box-shadow: 0 0 0 3px var(--c5), 0 0 50px rgba(var(--c5r),0.4); }
+.pad[data-i="5"].active .pad-sol { color: var(--c5d); }
+.pad[data-i="5"].active .pad-note { color: var(--c5d); }
+.pad[data-i="5"].hint { box-shadow: 0 0 0 4px var(--c5), 0 0 40px rgba(var(--c5r),0.5); animation: hint-glow 0.5s ease-in-out 3; }
+.pad[data-i="5"] .rpl { background: var(--c5); }
+
+@keyframes hint-glow {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.pad.wrong-flash {
+  animation: wrong-shake 0.35s ease;
+}
+@keyframes wrong-shake {
+  0%,100% { transform: translateX(0) scale(1); }
+  25% { transform: translateX(-5px) scale(0.97); }
+  75% { transform: translateX(5px) scale(0.97); }
+}
+
+/* ═══════════ FLOAT EMOJI FEEDBACK ═══════════ */
+.float-fb {
+  position: fixed;
+  font-size: 48px;
+  pointer-events: none;
+  z-index: 200;
+  animation: float-up 1.1s ease-out forwards;
+}
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(0.6); }
+  30%  { transform: translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-90px) scale(0.9); }
+}
+
+/* Free play mic button */
+#mic-fab {
+  position: fixed;
+  bottom: 24px; left: 50%; transform: translateX(-50%);
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(var(--c4r), 0.15);
+  border: 2px solid rgba(var(--c4r), 0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; cursor: pointer;
+  transition: all 0.2s;
+  z-index: 50;
+  display: none;
+}
+#mic-fab.show { display: flex; }
+#mic-fab.listening {
+  background: rgba(var(--c4r), 0.3);
+  border-color: var(--c4);
+  box-shadow: 0 0 0 8px rgba(var(--c4r), 0.15), 0 0 30px rgba(var(--c4r), 0.3);
+  animation: mic-pulse 1s infinite;
+}
+@keyframes mic-pulse {
+  50% { box-shadow: 0 0 0 14px rgba(var(--c4r), 0.08), 0 0 30px rgba(var(--c4r), 0.25); }
+}
+
+/* Level up notification */
+#levelup {
+  position: fixed;
+  top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  background: var(--surface);
+  border: 2px solid var(--c2);
+  border-radius: 24px;
+  padding: 24px 40px;
+  text-align: center;
+  z-index: 250;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  opacity: 0;
+}
+#levelup.show {
+  transform: translate(-50%,-50%) scale(1);
+  opacity: 1;
+}
+#levelup h2 { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--c2); }
+#levelup p  { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+</style>
+</head>
+<body>
+
+<!-- ─── START SCREEN ─── -->
+<div id="start">
+  <div class="start-bounce">🎵</div>
+  <h1>שיר איתי</h1>
+  <p>שמעי צלילים, מצאי אותם, ושירי אותם בחזרה!</p>
+  <div class="start-modes">
+    <div class="mode-row"><span>👂</span> שמעי צליל — מצאי אותו</div>
+    <div class="mode-row"><span>🎼</span> שמעי מנגינה — חזרי עליה</div>
+    <div class="mode-row"><span>🎤</span> שמעי — ושירי בחזרה!</div>
+  </div>
+  <div class="start-row">
+    <button class="start-btn primary" id="btn-with-mic">עם מיקרופון 🎤</button>
+    <button class="start-btn secondary" id="btn-no-mic">בלי מיק</button>
+  </div>
+</div>
+
+<!-- ─── SINGING OVERLAY ─── -->
+<div id="sing-overlay">
+  <div id="sing-close-btn">✕</div>
+  <div id="sing-target-name">—</div>
+  <div id="sing-target-note">—</div>
+  <div id="pitch-meter">
+    <div id="pitch-zone"></div>
+    <div id="pitch-cursor"></div>
+  </div>
+  <div id="sing-feedback" class="none">דברי לתוך המיקרופון...</div>
+  <div id="sing-hold-ring">
+    <div id="sing-hold-arc"></div>
+    <div id="sing-hold-pct">0%</div>
+  </div>
+</div>
+
+<!-- ─── LEVEL UP ─── -->
+<div id="levelup">
+  <h2>🌟 רמה חדשה!</h2>
+  <p id="levelup-msg">ממשיכות להתקדם</p>
+</div>
+
+<!-- ─── GAME ─── -->
+<div id="app">
+  <div id="header">
+    <div id="hearts"></div>
+    <div id="score-wrap">
+      <div id="score">0</div>
+      <div id="streak-badge">🔥</div>
+    </div>
+  </div>
+
+  <div id="timer-wrap"><div id="timer-fill"></div></div>
+
+  <div id="task-area">
+    <div id="task-badge">עוד רגע...</div>
+    <div id="task-text"></div>
+    <div id="mdots"></div>
+    <button id="listen-btn" class="hidden">
+      <div class="lb-icon">▶</div>
+      <span id="listen-label">שמעי שוב</span>
+    </button>
+  </div>
+
+  <div id="grid">
+    <div class="pad" data-i="0"><div class="pad-sol">דוֹ</div><div class="pad-note">C</div></div>
+    <div class="pad" data-i="1"><div class="pad-sol">רֵה</div><div class="pad-note">D</div></div>
+    <div class="pad" data-i="2"><div class="pad-sol">מִי</div><div class="pad-note">E</div></div>
+    <div class="pad" data-i="3"><div class="pad-sol">סוֹל</div><div class="pad-note">G</div></div>
+    <div class="pad" data-i="4"><div class="pad-sol">לָה</div><div class="pad-note">A</div></div>
+    <div class="pad" data-i="5"><div class="pad-sol">דוֹ׳</div><div class="pad-note">C5</div></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════
+// NOTES  (pentatonic C: C D E G A C5)
+// ════════════════════════════════════
+const NOTES = [
+  { i:0, freq:261.63, sol:'דוֹ',  name:'C'  },
+  { i:1, freq:293.66, sol:'רֵה',  name:'D'  },
+  { i:2, freq:329.63, sol:'מִי',  name:'E'  },
+  { i:3, freq:392.00, sol:'סוֹל', name:'G'  },
+  { i:4, freq:440.00, sol:'לָה',  name:'A'  },
+  { i:5, freq:523.25, sol:'דוֹ׳', name:'C5' },
+];
+
+const PAD_COLORS = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)'];
+
+// ════════════════════════════════════
+// AUDIO ENGINE — warm marimba tone
+// ════════════════════════════════════
+let ctx = null, reverb = null;
+
+function getCtx() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    buildReverb();
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function buildReverb() {
+  const sr = ctx.sampleRate, len = Math.floor(sr * 1.0);
+  const buf = ctx.createBuffer(2, len, sr);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++)
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.8) * 0.7;
+  }
+  reverb = ctx.createConvolver();
+  reverb.buffer = buf;
+  reverb.connect(ctx.destination);
+}
+
+function playNote(freq, dur = 0.7, vol = 0.45, when = null) {
+  const ac = getCtx();
+  const t = when ?? ac.currentTime;
+
+  // Triangle (marimba body) + 2nd harmonic + 5th harmonic
+  const waves = [
+    { type: 'triangle', detune: 0,   vol: 1.0 },
+    { type: 'sine',     detune: 0,   vol: 0.18, freq_mult: 2.001 },
+    { type: 'sine',     detune: 0,   vol: 0.06, freq_mult: 3.0 },
+  ];
+
+  const master = ac.createGain();
+  master.gain.setValueAtTime(0, t);
+  master.gain.linearRampToValueAtTime(vol, t + 0.007);
+  master.gain.exponentialRampToValueAtTime(vol * 0.55, t + 0.04);
+  master.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  master.connect(ac.destination);
+
+  const rvGain = ac.createGain();
+  rvGain.gain.value = 0.08;
+  rvGain.connect(reverb);
+
+  waves.forEach(w => {
+    const o = ac.createOscillator();
+    o.type = w.type;
+    o.frequency.value = freq * (w.freq_mult || 1);
+    const g = ac.createGain();
+    g.gain.value = w.vol;
+    o.connect(g);
+    g.connect(master);
+    g.connect(rvGain);
+    o.start(t); o.stop(t + dur + 0.05);
+  });
+}
+
+function playWin() {
+  [0,2,3,5].forEach((ni, i) =>
+    setTimeout(() => playNote(NOTES[ni].freq, 0.4, 0.35), i * 90));
+}
+
+function playFail() {
+  const ac = getCtx();
+  [200, 175].forEach((f, i) => setTimeout(() => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.18, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.3);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + 0.35);
+  }, i * 130));
+}
+
+// ════════════════════════════════════
+// PITCH DETECTION (autocorrelation)
+// ════════════════════════════════════
+let micStream = null, analyser = null, micEnabled = false;
+let pitchRAF = null, pitchActive = false;
+let singTarget = null, singHoldMs = 0, singHoldStart = null, singSuccess = false;
+let singCB = null;
+
+async function requestMic() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const ac = getCtx();
+    const src = ac.createMediaStreamSource(micStream);
+    analyser = ac.createAnalyser();
+    analyser.fftSize = 4096;
+    analyser.smoothingTimeConstant = 0.3;
+    src.connect(analyser);
+    micEnabled = true;
+    return true;
+  } catch(e) {
+    micEnabled = false;
+    return false;
+  }
+}
+
+function detectPitch() {
+  if (!analyser) return -1;
+  const buf = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(buf);
+
+  // RMS volume check
+  let rms = 0;
+  for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / buf.length);
+  if (rms < 0.008) return -1;
+
+  // Autocorrelation
+  const SIZE = buf.length;
+  const HALF = Math.floor(SIZE / 2);
+  const ac = ctx.sampleRate;
+
+  let bestOffset = -1, bestCorr = 0, lastCorr = 1;
+  let foundGoodCorr = false;
+
+  for (let offset = 0; offset < HALF; offset++) {
+    let corr = 0;
+    for (let i = 0; i < HALF; i++) corr += Math.abs(buf[i] - buf[i + offset]);
+    corr = 1 - (corr / HALF);
+
+    if (corr > 0.9 && corr > lastCorr) {
+      foundGoodCorr = true;
+      if (corr > bestCorr) { bestCorr = corr; bestOffset = offset; }
+    }
+    if (foundGoodCorr && corr < 0.8) break;
+    lastCorr = corr;
+  }
+
+  if (bestOffset === -1 || bestCorr < 0.9) return -1;
+
+  // Interpolation
+  const x1 = bestOffset - 1, x2 = bestOffset, x3 = bestOffset + 1;
+  const y1 = x1 >= 0 ? (1 - (Math.abs(buf[0] - buf[x1]) / HALF)) : bestCorr;
+  const y3 = x3 < HALF ? (1 - (Math.abs(buf[0] - buf[x3]) / HALF)) : bestCorr;
+  let refined = x2;
+  if (y1 !== y3) refined = x2 - (y3 - y1) / (2 * (y1 - 2 * bestCorr + y3));
+
+  return refined > 0 ? ac / refined : -1;
+}
+
+// Frequency → cents from target
+function centsDiff(detected, target) {
+  return 1200 * Math.log2(detected / target);
+}
+
+// ════════════════════════════════════
+// SINGING UI
+// ════════════════════════════════════
+const singOverlay    = document.getElementById('sing-overlay');
+const singTargetName = document.getElementById('sing-target-name');
+const singTargetNote = document.getElementById('sing-target-note');
+const pitchCursor    = document.getElementById('pitch-cursor');
+const singFeedback   = document.getElementById('sing-feedback');
+const singHoldArc    = document.getElementById('sing-hold-arc');
+const singHoldPct    = document.getElementById('sing-hold-pct');
+
+// HOLD_MS: how long user must hold the right pitch
+const HOLD_MS_REQUIRED = 1500;
+const CENTS_OK = 55; // ±55 cents = success range
+const CENTS_DISPLAY_RANGE = 700; // cents for full meter height
+
+function openSingOverlay(note, cb) {
+  singTarget   = note;
+  singCB       = cb;
+  singHoldStart = null;
+  singSuccess  = false;
+
+  singTargetName.textContent = note.sol;
+  singTargetName.style.color = PAD_COLORS[note.i];
+  singTargetNote.textContent = note.name + ' · ' + Math.round(note.freq) + ' Hz';
+
+  singHoldArc.style.opacity = '0';
+  singHoldArc.style.animation = 'none';
+  singHoldPct.textContent = '0%';
+  pitchCursor.style.top = '50%';
+  singFeedback.textContent = 'שירי...';
+  singFeedback.className = 'none';
+
+  singOverlay.classList.add('active');
+  startPitchLoop();
+}
+
+function closeSingOverlay(success) {
+  stopPitchLoop();
+  singOverlay.classList.remove('active');
+  if (singCB) { singCB(success); singCB = null; }
+}
+
+function startPitchLoop() {
+  pitchActive = true;
+  function loop() {
+    if (!pitchActive) return;
+    const freq = detectPitch();
+    updateSingUI(freq);
+    pitchRAF = requestAnimationFrame(loop);
+  }
+  pitchRAF = requestAnimationFrame(loop);
+}
+
+function stopPitchLoop() {
+  pitchActive = false;
+  if (pitchRAF) { cancelAnimationFrame(pitchRAF); pitchRAF = null; }
+}
+
+function updateSingUI(freq) {
+  if (!singTarget || singSuccess) return;
+
+  if (freq <= 0) {
+    // No voice detected
+    singFeedback.textContent = 'שירי...';
+    singFeedback.className = 'none';
+    singHoldStart = null;
+    singHoldArc.style.opacity = '0';
+    singHoldArc.style.animation = 'none';
+    singHoldPct.textContent = '0%';
+    pitchCursor.style.background = 'var(--c1)';
+    return;
+  }
+
+  const cents = centsDiff(freq, singTarget.freq);
+
+  // Map cents to cursor position (50% = perfect)
+  const clampedCents = Math.max(-CENTS_DISPLAY_RANGE, Math.min(CENTS_DISPLAY_RANGE, cents));
+  // Invert: high pitch → top of meter (lower top% value)
+  const pct = 50 - (clampedCents / CENTS_DISPLAY_RANGE) * 45;
+  pitchCursor.style.top = pct + '%';
+
+  const absCents = Math.abs(cents);
+
+  if (absCents <= CENTS_OK) {
+    // IN ZONE
+    pitchCursor.style.background = 'var(--c0)';
+    singFeedback.textContent = 'כן! תחזיקי! 🎵';
+    singFeedback.className = 'ok';
+
+    if (!singHoldStart) singHoldStart = Date.now();
+    const held = Date.now() - singHoldStart;
+    const pctDone = Math.min(100, Math.round((held / HOLD_MS_REQUIRED) * 100));
+    singHoldPct.textContent = pctDone + '%';
+
+    // Arc animation
+    singHoldArc.style.opacity = '1';
+    const deg = (pctDone / 100) * 360;
+    singHoldArc.style.transform = `rotate(${deg}deg)`;
+    singHoldArc.style.borderTopColor = 'var(--c0)';
+    singHoldArc.style.animation = 'none';
+
+    if (held >= HOLD_MS_REQUIRED) {
+      singSuccess = true;
+      singFeedback.textContent = '🌟 מושלם!';
+      singHoldPct.textContent = '✓';
+      setTimeout(() => closeSingOverlay(true), 600);
+    }
+  } else {
+    singHoldStart = null;
+    singHoldArc.style.opacity = '0';
+    singHoldPct.textContent = '0%';
+
+    if (cents > 0) {
+      pitchCursor.style.background = 'var(--c3)';
+      singFeedback.textContent = 'קצת גבוה ⬇ הורידי';
+      singFeedback.className = 'high';
+    } else {
+      pitchCursor.style.background = 'var(--c1)';
+      singFeedback.textContent = 'קצת נמוך ⬆ הרימי';
+      singFeedback.className = 'low';
+    }
+  }
+}
+
+// close button
+document.getElementById('sing-close-btn').addEventListener('click', () => closeSingOverlay(false));
+
+// ════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════
+let score = 0, streak = 0, lives = 3;
+let level = 1, taskCount = 0;
+let task = null, gameOn = false;
+let taskTimer = null, isPlaying = false;
+let useMic = false;
+
+const padEls = Array.from(document.querySelectorAll('.pad'));
+
+function startGame(withMic) {
+  useMic = withMic;
+  score = 0; streak = 0; lives = 3; level = 1; taskCount = 0;
+  updateHUD();
+  gameOn = true;
+  setTimeout(nextTask, 400);
+}
+
+// ════════════════════════════════════
+// TASK FACTORY
+// ════════════════════════════════════
+function randNote(exclude = []) {
+  const pool = NOTES.filter(n => !exclude.includes(n.i));
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function makeTask() {
+  const type = chooseType();
+
+  if (type === 'free') {
+    return { type, badge: '🎹 נגני חופשי', text: 'נגני כל צליל שאת רוצה!\n(5 שניות)', time: 5000 };
+  }
+
+  if (type === 'find') {
+    const note = randNote();
+    return {
+      type, note,
+      badge: '👂 מצאי את הצליל',
+      text: `שמעי → מצאי על הלוח`,
+      time: 10000,
+      errors: 0,
+    };
+  }
+
+  if (type === 'sing') {
+    const note = randNote();
+    return {
+      type, note,
+      badge: '🎤 שירי את הצליל',
+      text: `שמעי → שירי: ${note.sol}`,
+      time: 18000,
+    };
+  }
+
+  if (type === 'melody') {
+    const len = level < 4 ? 2 : level < 7 ? 3 : 4;
+    const melody = [];
+    for (let i = 0; i < len; i++) melody.push(randNote([]));
+    return {
+      type, melody, progress: [],
+      badge: '🎼 חזרי על המנגינה',
+      text: 'שמעי → חזרי על הסדר',
+      time: 4500 + len * 2800,
+    };
+  }
+
+  // sing-find: hear → sing
+  if (type === 'sing-find') {
+    const note = randNote();
+    return {
+      type, note,
+      badge: '🌟 שמעי ושירי',
+      text: `שמעי → שירי: ${note.sol}`,
+      time: 20000,
+    };
+  }
+}
+
+function chooseType() {
+  if (taskCount === 0) return 'free';
+  const r = Math.random();
+  if (level === 1) return r < 0.6 ? 'find' : 'melody';
+  if (level === 2) {
+    if (!useMic) return r < 0.55 ? 'find' : 'melody';
+    return r < 0.35 ? 'find' : r < 0.65 ? 'sing' : 'melody';
+  }
+  if (!useMic) return r < 0.45 ? 'find' : 'melody';
+  if (level <= 4) return r < 0.25 ? 'find' : r < 0.5 ? 'sing' : r < 0.75 ? 'melody' : 'sing-find';
+  return r < 0.2 ? 'find' : r < 0.45 ? 'sing' : r < 0.7 ? 'melody' : 'sing-find';
+}
+
+// ════════════════════════════════════
+// TASK LIFECYCLE
+// ════════════════════════════════════
+function nextTask() {
+  clearTimeout(taskTimer);
+  task = makeTask();
+  taskCount++;
+
+  // Level up check
+  if (taskCount > 1 && (taskCount - 1) % 4 === 0) {
+    level++;
+    showLevelUp();
+  }
+
+  renderTask(task);
+
+  // Auto-play for listening tasks
+  if (['find','melody','sing','sing-find'].includes(task.type)) {
+    setListenPlaying(true);
+    setTimeout(() => {
+      playTaskAudio(task, () => {
+        setListenPlaying(false);
+        if (task.type === 'sing' || task.type === 'sing-find') {
+          // Open singing overlay after playback
+          setTimeout(() => {
+            openSingOverlay(task.note, (success) => {
+              if (success) {
+                onSuccess(task.type === 'sing-find' ? 130 : 100);
+              } else {
+                onMiss();
+              }
+            });
+          }, 200);
+        } else {
+          beginTimer(task.time);
+        }
+      });
+    }, 600);
+  } else {
+    beginTimer(task.time);
+  }
+}
+
+function renderTask(t) {
+  document.getElementById('task-badge').textContent = t.badge;
+  document.getElementById('task-text').textContent = t.text;
+  document.getElementById('mdots').innerHTML = '';
+  document.getElementById('listen-btn').classList.toggle('hidden',
+    !['find','melody','sing','sing-find'].includes(t.type));
+
+  if (t.type === 'melody') {
+    renderMdots(t);
+  }
+}
+
+function renderMdots(t) {
+  const mp = document.getElementById('mdots');
+  mp.innerHTML = '';
+  t.melody.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'mdot ' + (i === 0 ? 'current' : '');
+    mp.appendChild(d);
+  });
+}
+
+function updateMdot(idx, state) {
+  document.querySelectorAll('.mdot')[idx]?.classList.replace('current', state) ||
+  document.querySelectorAll('.mdot')[idx]?.classList.add(state);
+}
+
+let playbackTimers = [];
+
+function playTaskAudio(t, cb) {
+  playbackTimers.forEach(clearTimeout); playbackTimers = [];
+  isPlaying = true;
+
+  if (t.type === 'find' || t.type === 'sing' || t.type === 'sing-find') {
+    flashPad(t.note.i, 600);
+    playNote(t.note.freq, 0.9, 0.42);
+    playbackTimers.push(setTimeout(() => { isPlaying = false; if (cb) cb(); }, 1000));
+
+  } else if (t.type === 'melody') {
+    const GAP = 520;
+    t.melody.forEach((n, i) => {
+      playbackTimers.push(setTimeout(() => {
+        flashPad(n.i, 440);
+        playNote(n.freq, 0.55, 0.40);
+        if (i === t.melody.length - 1) {
+          playbackTimers.push(setTimeout(() => { isPlaying = false; if (cb) cb(); }, 500));
+        }
+      }, i * GAP));
+    });
+  }
+}
+
+function flashPad(padIdx, ms) {
+  const el = padEls[padIdx];
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), ms);
+}
+
+function beginTimer(ms) {
+  clearTimeout(taskTimer);
+  const fill = document.getElementById('timer-fill');
+  fill.style.transition = 'none'; fill.style.width = '100%';
+  requestAnimationFrame(() => {
+    fill.style.transition = `width ${ms}ms linear`;
+    fill.style.width = '0%';
+  });
+  taskTimer = setTimeout(() => onTimeout(), ms);
+}
+
+function stopTimer() {
+  clearTimeout(taskTimer);
+  document.getElementById('timer-fill').style.width = '0%';
+}
+
+// ════════════════════════════════════
+// PAD INPUT
+// ════════════════════════════════════
+document.getElementById('grid').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const el = e.target.closest('.pad');
+  if (!el) return;
+  const i = +el.dataset.i;
+  const n = NOTES[i];
+
+  // Always play sound
+  playNote(n.freq, 0.6, 0.42);
+  el.classList.add('active');
+  addRipple(el, i);
+  setTimeout(() => el.classList.remove('active'), 220);
+
+  if (!gameOn || !task) return;
+
+  if (task.type === 'free') return;
+
+  if (task.type === 'find') evalFind(i, el);
+  if (task.type === 'melody') evalMelody(i, el);
+});
+
+document.getElementById('grid').addEventListener('pointerup', () => {});
+
+function addRipple(el, idx) {
+  const r = document.createElement('div');
+  r.className = 'rpl';
+  const s = el.offsetWidth * 0.5;
+  Object.assign(r.style, { width:s+'px', height:s+'px', left:'50%', top:'50%',
+    marginLeft:(-s/2)+'px', marginTop:(-s/2)+'px' });
+  el.appendChild(r);
+  setTimeout(() => r.remove(), 550);
+}
+
+// ════════════════════════════════════
+// EVALUATION
+// ════════════════════════════════════
+function evalFind(padIdx, el) {
+  if (padIdx === task.note.i) {
+    stopTimer();
+    el.classList.add('active');
+    floatEmoji('⭐', el);
+    onSuccess(80 + level * 12);
+  } else {
+    task.errors++;
+    el.classList.add('wrong-flash');
+    setTimeout(() => el.classList.remove('wrong-flash'), 380);
+    playFail();
+    score = Math.max(0, score - 5);
+    updateHUD();
+    // Give visual hint after 2 errors
+    if (task.errors >= 2) {
+      padEls[task.note.i].classList.add('hint');
+      setTimeout(() => padEls[task.note.i].classList.remove('hint'), 1600);
+    }
+  }
+}
+
+function evalMelody(padIdx, el) {
+  const expected = task.melody[task.progress.length].i;
+  if (padIdx === expected) {
+    updateMdot(task.progress.length, 'hit');
+    task.progress.push(padIdx);
+    floatEmoji('✨', el);
+    if (task.progress.length === task.melody.length) {
+      stopTimer();
+      onSuccess(90 + level * 15);
+    } else {
+      updateMdot(task.progress.length, 'current');
+    }
+  } else {
+    el.classList.add('wrong-flash');
+    setTimeout(() => el.classList.remove('wrong-flash'), 380);
+    playFail();
+    task.progress = [];
+    renderMdots(task);
+    score = Math.max(0, score - 8);
+    updateHUD();
+  }
+}
+
+// ════════════════════════════════════
+// SUCCESS / FAIL / TIMEOUT
+// ════════════════════════════════════
+function onSuccess(pts = 100) {
+  if (!gameOn) return;
+  score += pts;
+  streak++;
+  updateHUD();
+  playWin();
+
+  // Bonus feedback
+  const msg = streak >= 5 ? '🔥' : streak >= 3 ? '⭐' : '🎉';
+  floatEmojiCenter(msg);
+
+  gameOn = false;
+  setTimeout(() => { gameOn = true; nextTask(); }, 1600);
+}
+
+function onMiss() {
+  if (!gameOn) return;
+  lives--;
+  streak = 0;
+  updateHUD();
+  playFail();
+  floatEmojiCenter('💙');
+  gameOn = false;
+  if (lives <= 0) {
+    setTimeout(gameOver, 1400);
+  } else {
+    setTimeout(() => { gameOn = true; nextTask(); }, 1600);
+  }
+}
+
+function onTimeout() {
+  if (!gameOn) return;
+  onMiss();
+}
+
+function gameOver() {
+  // Simple restart — could expand
+  lives = 3; streak = 0; level = 1; taskCount = 0;
+  updateHUD();
+  gameOn = true;
+  nextTask();
+}
+
+// ════════════════════════════════════
+// LISTEN BUTTON
+// ════════════════════════════════════
+document.getElementById('listen-btn').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (isPlaying || !task) return;
+  setListenPlaying(true);
+  playTaskAudio(task, () => setListenPlaying(false));
+});
+
+function setListenPlaying(on) {
+  const btn = document.getElementById('listen-btn');
+  const icon = btn.querySelector('.lb-icon');
+  btn.classList.toggle('playing', on);
+  icon.textContent = on ? '■' : '▶';
+  document.getElementById('listen-label').textContent = on ? 'מנגנת...' : 'שמעי שוב';
+}
+
+// ════════════════════════════════════
+// HUD
+// ════════════════════════════════════
+function updateHUD() {
+  document.getElementById('score').textContent = score;
+  const sb = document.getElementById('streak-badge');
+  if (streak >= 3) { sb.textContent = '🔥 ×' + streak; sb.classList.add('show'); }
+  else sb.classList.remove('show');
+  const hearts = document.getElementById('hearts');
+  hearts.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    hearts.innerHTML += `<span style="opacity:${i < lives ? 1 : 0.2}">❤️</span>`;
+  }
+}
+
+function showLevelUp() {
+  const msgs = ['', 'מתחילות!', 'מצוין!', 'כישרון!', 'מדהים!', 'וירטואוזית!'];
+  document.getElementById('levelup-msg').textContent = (msgs[level] || '🌟') + ' רמה ' + level;
+  const el = document.getElementById('levelup');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ════════════════════════════════════
+// FLOAT EMOJI
+// ════════════════════════════════════
+function floatEmoji(emoji, refEl) {
+  const rect = refEl.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'float-fb';
+  el.textContent = emoji;
+  el.style.left = (rect.left + rect.width / 2 - 24) + 'px';
+  el.style.top  = (rect.top - 10) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function floatEmojiCenter(emoji) {
+  const el = document.createElement('div');
+  el.className = 'float-fb';
+  el.textContent = emoji;
+  el.style.left  = 'calc(50% - 28px)';
+  el.style.top   = '40%';
+  el.style.fontSize = '60px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+// ════════════════════════════════════
+// START BUTTONS
+// ════════════════════════════════════
+document.getElementById('btn-with-mic').addEventListener('click', async () => {
+  getCtx();
+  const startEl = document.getElementById('start');
+  startEl.classList.add('out');
+  setTimeout(() => startEl.style.display = 'none', 500);
+
+  const got = await requestMic();
+  useMic = got;
+  updateHUD();
+  startGame(got);
+});
+
+document.getElementById('btn-no-mic').addEventListener('click', () => {
+  getCtx();
+  const startEl = document.getElementById('start');
+  startEl.classList.add('out');
+  setTimeout(() => startEl.style.display = 'none', 500);
+  updateHUD();
+  startGame(false);
+});
+
+</script>
+</body>
+</html>
