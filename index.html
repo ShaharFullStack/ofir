@@ -2,231 +2,263 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>משחק מוזיקלי למובייל</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>משחקים מוזיקליים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        body, html {
+        *, *::before, *::after {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1a1a2e;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* מניעת גלילה */
-            touch-action: none; /* מניעת פעולות מגע דיפולטיביות של הדפדפן כמו Pull-to-refresh */
         }
 
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
+        :root {
+            --bg: #07070d;
+            --surface: #0e0e18;
+            --text: #dde0f0;
+            --dim: #42445a;
+            --c0: #00e676;
+            --c1: #40c4ff;
+            --c2: #ffab40;
+            --c3: #ff5252;
+            --c4: #e040fb;
+            --c5: #64ffda;
+        }
+
+        html, body {
             width: 100%;
-            padding: 15px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
-            font-size: 24px;
-            font-weight: bold;
-            z-index: 10;
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Noto Sans Hebrew', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* GRAIN OVERLAY */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.025;
             pointer-events: none;
+            z-index: 1;
         }
 
-        #game-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .target {
-            position: absolute;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 20px;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-            transition: transform 0.1s ease-out;
-            /* מרכז את העיגול ביחס לנקודת הציון שלו */
-            transform: translate(-50%, -50%); 
-        }
-
-        .target:active {
-            transform: translate(-50%, -50%) scale(1.2);
-        }
-
-        #start-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(26, 26, 46, 0.9);
+        .container {
+            position: fixed;
+            inset: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            padding: 20px;
+            z-index: 10;
         }
 
-        button {
-            padding: 15px 40px;
-            font-size: 24px;
-            background-color: #e94560;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--c0), var(--c1), var(--c2), var(--c4));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: var(--dim);
+            font-weight: 300;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 350px;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .game-button {
+            position: relative;
+            padding: 25px 30px;
+            border: 2px solid var(--dim);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 1.3em;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 12px;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            text-align: center;
+            overflow: hidden;
+            font-family: 'Noto Sans Hebrew', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            min-height: 70px;
+        }
+
+        .game-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .game-button:hover {
+            border-color: var(--text);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+        }
+
+        .game-button.btn1 {
+            border-color: var(--c0);
+            color: var(--c0);
+        }
+
+        .game-button.btn1:hover {
+            background: rgba(0, 230, 118, 0.1);
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.3), inset 0 0 20px rgba(0, 230, 118, 0.05);
+        }
+
+        .game-button.btn2 {
+            border-color: var(--c1);
+            color: var(--c1);
+        }
+
+        .game-button.btn2:hover {
+            background: rgba(64, 196, 255, 0.1);
+            box-shadow: 0 0 20px rgba(64, 196, 255, 0.3), inset 0 0 20px rgba(64, 196, 255, 0.05);
+        }
+
+        .game-button.btn3 {
+            border-color: var(--c4);
+            color: var(--c4);
+        }
+
+        .game-button.btn3:hover {
+            background: rgba(224, 64, 251, 0.1);
+            box-shadow: 0 0 20px rgba(224, 64, 251, 0.3), inset 0 0 20px rgba(224, 64, 251, 0.05);
+        }
+
+        .game-icon {
+            font-size: 1.5em;
+        }
+
+        .game-text {
+            flex: 1;
+        }
+
+        .game-label {
+            display: block;
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .header p {
+                font-size: 0.95em;
+            }
+
+            .game-button {
+                padding: 20px 25px;
+                font-size: 1.1em;
+                min-height: 60px;
+            }
+
+            .menu {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 משחקים מוזיקליים</h1>
+            <p>בחר משחק להתחיל</p>
+        </div>
 
-    <div id="ui-layer">
-        <div>ניקוד: <span id="score">0</span></div>
-        <div>זמן: <span id="timer">30</span></div>
+        <div class="menu">
+            <a href="muzikay.html" class="game-button btn1">
+                <span class="game-icon">🎸</span>
+                <span class="game-text">
+                    <span>מוזיקאי</span>
+                    <span class="game-label">משחק הקצב</span>
+                </span>
+            </a>
+
+            <a href="muzikay1.html" class="game-button btn2">
+                <span class="game-icon">🎯</span>
+                <span class="game-text">
+                    <span>משחק מוזיקלי I</span>
+                    <span class="game-label">נגן את התווים</span>
+                </span>
+            </a>
+
+            <a href="muzikay2.html" class="game-button btn3">
+                <span class="game-icon">👂</span>
+                <span class="game-text">
+                    <span>אוזן מוזיקלית</span>
+                    <span class="game-label">זיהוי תווים</span>
+                </span>
+            </a>
+        </div>
     </div>
-
-    <div id="game-area"></div>
-
-    <div id="start-overlay">
-        <h1 style="margin-bottom: 30px;">הקצב שלך</h1>
-        <button id="start-btn">התחל לנגן</button>
-    </div>
-
-    <script>
-        // הגדרות המשחק
-        let score = 0;
-        let timeLeft = 30;
-        let gameInterval;
-        let timerInterval;
-        let synth;
-
-        // סולם פנטטוני (נשמע טוב בכל סדר)
-        const notes = ["C4", "D4", "E4", "G4", "A4", "C5"];
-        const colors = ["#ff9a9e", "#fecfef", "#a18cd1", "#fbc2eb", "#8fd3f4", "#84fab0"];
-
-        const scoreEl = document.getElementById('score');
-        const timerEl = document.getElementById('timer');
-        const gameArea = document.getElementById('game-area');
-        const startOverlay = document.getElementById('start-overlay');
-        const startBtn = document.getElementById('start-btn');
-
-        // אתחול המשחק
-        async function initGame() {
-            // חובה להפעיל את האודיו רק אחרי אינטראקציית משתמש (מדיניות דפדפנים)
-            await Tone.start();
-            
-            // יצירת סינתיסייזר פוליפוני כדי לאפשר נגינת מספר תווים יחד
-            synth = new Tone.PolySynth(Tone.Synth).toDestination();
-            
-            startOverlay.style.display = 'none';
-            score = 0;
-            timeLeft = 30;
-            scoreEl.innerText = score;
-            timerEl.innerText = timeLeft;
-            gameArea.innerHTML = '';
-
-            startGameLoop();
-        }
-
-        function startGameLoop() {
-            // יצירת מטרה חדשה כל 800 מילישניות
-            gameInterval = setInterval(spawnTarget, 800);
-            
-            // טיימר המשחק
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    endGame();
-                }
-            }, 1000);
-        }
-
-        function spawnTarget() {
-            const target = document.createElement('div');
-            target.classList.add('target');
-            
-            // גודל אקראי מותאם לאצבע
-            const size = Math.floor(Math.random() * 40) + 70; 
-            target.style.width = `${size}px`;
-            target.style.height = `${size}px`;
-
-            // מיקום אקראי (תוך שמירה על שוליים כדי שלא יחרוג מהמסך)
-            const x = Math.max(size/2, Math.random() * (window.innerWidth - size/2));
-            const y = Math.max(size/2 + 60, Math.random() * (window.innerHeight - size/2));
-            
-            target.style.left = `${x}px`;
-            target.style.top = `${y}px`;
-
-            // בחירת תו וצבע אקראיים
-            const noteIndex = Math.floor(Math.random() * notes.length);
-            const note = notes[noteIndex];
-            target.style.backgroundColor = colors[noteIndex];
-
-            // שימוש ב-touchstart מאפשר תגובה מיידית במובייל ללא הדיליי של 300ms שיש ל-click
-            target.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // מניעת גלילה או זום אקראיים בעת הלחיצה
-                hitTarget(target, note);
-            });
-            
-            // תמיכה גם בעכבר למקרה שבודקים בדסקטופ
-            target.addEventListener('mousedown', (e) => {
-                hitTarget(target, note);
-            });
-
-            gameArea.appendChild(target);
-
-            // המטרה נעלמת אחרי 1.5 שניות אם לא נלחצה
-            setTimeout(() => {
-                if (target.parentElement) {
-                    target.style.opacity = '0';
-                    target.style.transform = 'translate(-50%, -50%) scale(0.1)';
-                    setTimeout(() => target.remove(), 200);
-                }
-            }, 1500);
-        }
-
-        function hitTarget(target, note) {
-            // נגינת התו
-            synth.triggerAttackRelease(note, "8n");
-            
-            // עדכון ניקוד
-            score += 10;
-            scoreEl.innerText = score;
-
-            // אפקט חזותי להעלמת המטרה
-            target.style.transition = 'all 0.1s';
-            target.style.transform = 'translate(-50%, -50%) scale(1.5)';
-            target.style.opacity = '0';
-            
-            setTimeout(() => {
-                if (target.parentElement) target.remove();
-            }, 100);
-        }
-
-        function endGame() {
-            clearInterval(gameInterval);
-            clearInterval(timerInterval);
-            gameArea.innerHTML = '';
-            
-            startOverlay.style.display = 'flex';
-            startOverlay.innerHTML = `
-                <h1 style="margin-bottom: 10px;">הזמן נגמר!</h1>
-                <h2 style="margin-bottom: 30px;">הניקוד שלך: ${score}</h2>
-                <button id="restart-btn" onclick="initGame()">שחק שוב</button>
-            `;
-        }
-
-        startBtn.addEventListener('click', initGame);
-    </script>
 </body>
 </html>
