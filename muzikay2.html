@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>אוזן מוזיקלית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0b0b12;
+  --panel: #12121f;
+  --line: #1e1e32;
+  --dim: #36364e;
+  --muted: #5a5a7a;
+  --text: #d4d4e8;
+  --text-hi: #f0f0ff;
+  --play: #60a8ff;     /* playback color */
+  --hit:  #4dffc3;     /* correct */
+  --miss: #ff5a6e;     /* wrong */
+  --gold: #ffd566;     /* score */
+  --key-bg: #1a1a2c;
+  --key-border: #2a2a44;
+  --key-active: #3d3d60;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ═══ LAYOUT ═══ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ═══ HEADER ═══ */
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  flex-shrink: 0;
+}
+
+#logo {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#score-area {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+#score {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+#streak {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ═══ TASK PANEL ═══ */
+#task-panel {
+  flex-shrink: 0;
+  margin: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px 22px 18px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#task-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#task-instruction {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text-hi);
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+/* Playback button */
+#listen-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(96,168,255,0.1);
+  border: 1.5px solid rgba(96,168,255,0.25);
+  border-radius: 50px;
+  padding: 11px 20px;
+  color: var(--play);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.15s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+#listen-btn:active { transform: scale(0.95); background: rgba(96,168,255,0.2); }
+#listen-btn.playing {
+  background: rgba(96,168,255,0.2);
+  border-color: rgba(96,168,255,0.6);
+}
+#listen-btn.hidden { display: none; }
+
+.listen-icon {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--play);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  padding-right: 1px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+#listen-btn.playing .listen-icon {
+  background: var(--play);
+  color: #001429;
+  border-color: var(--play);
+}
+
+/* ═══ FEEDBACK AREA ═══ */
+#feedback-area {
+  flex-shrink: 0;
+  padding: 10px 16px 6px;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Melody progress dots */
+#melody-progress {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mp-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.mp-dot.pending { background: rgba(96,168,255,0.25); border: 1.5px solid rgba(96,168,255,0.4); }
+.mp-dot.hit { background: var(--hit); transform: scale(1.3); }
+.mp-dot.miss { background: var(--miss); transform: scale(1.3); }
+.mp-dot.current { background: transparent; border: 2px solid var(--play); animation: pulse 0.8s infinite; }
+
+@keyframes pulse { 50% { border-color: rgba(96,168,255,0.3); transform: scale(1.15); } }
+
+/* Rhythm grid */
+#rhythm-grid {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.r-beat {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  background: var(--line);
+  transition: background 0.1s, transform 0.08s;
+  position: relative;
+}
+.r-beat.strong { width: 28px; height: 28px; border-radius: 7px; }
+.r-beat.active-play { background: var(--play); transform: scale(1.2); box-shadow: 0 0 10px var(--play); }
+.r-beat.beat-on { background: rgba(96,168,255,0.3); }
+.r-beat.beat-off { background: var(--line); }
+.r-beat.tap-hit { background: var(--hit); transform: scale(1.2); box-shadow: 0 0 10px var(--hit); }
+.r-beat.tap-miss { background: var(--miss); }
+
+/* Feedback text */
+#fb-text {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  height: 22px;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s;
+}
+#fb-text.ok { color: var(--hit); }
+#fb-text.fail { color: var(--miss); }
+#fb-text.info { color: var(--muted); }
+
+/* ═══ INSTRUMENT AREA ═══ */
+#instrument {
+  flex: 1;
+  padding: 8px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ─── KEYBOARD ─── */
+#keyboard {
+  display: flex;
+  gap: 7px;
+  height: 100%;
+  max-height: 200px;
+}
+
+.key {
+  flex: 1;
+  border-radius: 14px;
+  background: var(--key-bg);
+  border: 1.5px solid var(--key-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 14px;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.06s, background 0.1s, border-color 0.1s, box-shadow 0.1s;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--dim);
+  pointer-events: none;
+  transition: color 0.1s;
+}
+
+.key-solfege {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.1s;
+  line-height: 1;
+}
+
+/* Key states */
+.key.pressed {
+  background: var(--key-active);
+  border-color: rgba(255,255,255,0.15);
+  transform: scale(0.94) translateY(2px);
+  box-shadow: none;
+}
+
+.key.playback {
+  background: rgba(96,168,255,0.12);
+  border-color: var(--play);
+  box-shadow: 0 0 20px rgba(96,168,255,0.2), inset 0 0 15px rgba(96,168,255,0.08);
+}
+.key.playback .key-name { color: var(--play); }
+.key.playback .key-solfege { color: var(--play); }
+
+.key.correct {
+  background: rgba(77,255,195,0.12);
+  border-color: var(--hit);
+  box-shadow: 0 0 24px rgba(77,255,195,0.25);
+}
+.key.correct .key-name { color: var(--hit); }
+.key.correct .key-solfege { color: var(--hit); }
+
+.key.wrong {
+  background: rgba(255,90,110,0.12);
+  border-color: var(--miss);
+  box-shadow: 0 0 18px rgba(255,90,110,0.2);
+}
+.key.wrong .key-name { color: var(--miss); }
+.key.wrong .key-solfege { color: var(--miss); }
+
+/* ─── RHYTHM PAD ─── */
+#rhythm-pad-wrap {
+  height: 100%;
+  max-height: 200px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+#rhythm-pad-wrap.visible { display: flex; }
+
+#rhythm-hint {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+#rhythm-pad {
+  width: 100%;
+  flex: 1;
+  max-height: 160px;
+  border-radius: 24px;
+  background: var(--key-bg);
+  border: 1.5px solid var(--key-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.06s, background 0.08s, border-color 0.1s, box-shadow 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+#rhythm-pad::after {
+  content: '◉';
+  font-size: 40px;
+  color: var(--dim);
+  transition: color 0.1s, transform 0.06s;
+}
+
+#rhythm-pad.tapped {
+  background: rgba(77,255,195,0.1);
+  border-color: var(--hit);
+  box-shadow: 0 0 30px rgba(77,255,195,0.2);
+  transform: scale(0.96);
+}
+#rhythm-pad.tapped::after {
+  color: var(--hit);
+  transform: scale(1.15);
+}
+
+/* ═══ START SCREEN ═══ */
+#start {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px; padding: 36px;
+  z-index: 200;
+  transition: opacity 0.4s;
+}
+#start.hidden { opacity: 0; pointer-events: none; }
+
+#start h1 {
+  font-size: 34px; font-weight: 900;
+  text-align: center; line-height: 1.2;
+  color: var(--text-hi);
+}
+
+.start-desc {
+  max-width: 280px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.feature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.feature-icon { font-size: 22px; flex-shrink: 0; }
+
+#start-btn {
+  margin-top: 4px;
+  padding: 16px 56px;
+  background: var(--play);
+  color: #001122;
+  border: none; border-radius: 50px;
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 18px; font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(96,168,255,0.35);
+  transition: transform 0.1s;
+}
+#start-btn:active { transform: scale(0.95); }
+
+/* ═══ END SCREEN ═══ */
+#end {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px; padding: 36px;
+  z-index: 200;
+}
+#end.show { display: flex; }
+
+#end-score {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 72px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+#end h2 {
+  font-size: 22px; font-weight: 900;
+  color: var(--text-hi);
+}
+#end p { font-size: 14px; color: var(--muted); text-align: center; }
+
+#restart-btn {
+  margin-top: 10px;
+  padding: 14px 48px;
+  background: var(--panel);
+  color: var(--text-hi);
+  border: 1.5px solid var(--line);
+  border-radius: 50px;
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 17px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#restart-btn:active { background: var(--line); }
+
+/* ═══ TIMER STRIP ═══ */
+#timer-strip {
+  height: 2px;
+  background: var(--line);
+  margin: 0 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+#timer-bar {
+  height: 100%;
+  width: 100%;
+  background: var(--play);
+  transform-origin: right;
+  transition: width linear;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Start screen -->
+<div id="start">
+  <div style="font-size:48px">🎵</div>
+  <h1>אוזן מוזיקלית</h1>
+  <p class="start-desc">שמע — וחזור. כאן המשחק הוא בתוך הצליל.</p>
+  <div class="feature-row">
+    <div class="feature"><span class="feature-icon">👂</span><span>שמע צליל → מצא אותו על הקלידה</span></div>
+    <div class="feature"><span class="feature-icon">🎼</span><span>שמע מנגינה → חזור עליה בסדר</span></div>
+    <div class="feature"><span class="feature-icon">🥁</span><span>שמע קצב → הקש אותו בחזרה</span></div>
+  </div>
+  <button id="start-btn">התחל לשמוע ▶</button>
+</div>
+
+<!-- End screen -->
+<div id="end">
+  <div style="font-size:52px">🏆</div>
+  <div id="end-score">000</div>
+  <h2>כל הכבוד!</h2>
+  <p id="end-stats"></p>
+  <button id="restart-btn">שחק שוב</button>
+</div>
+
+<!-- Game -->
+<div id="app">
+  <div id="header">
+    <div id="logo">אוזן מוזיקלית</div>
+    <div id="score-area">
+      <div id="score">0</div>
+      <div id="streak"></div>
+    </div>
+  </div>
+
+  <div id="timer-strip"><div id="timer-bar"></div></div>
+
+  <div id="task-panel">
+    <div id="task-type">טוען...</div>
+    <div id="task-instruction">—</div>
+    <button id="listen-btn">
+      <div class="listen-icon">▶</div>
+      <span id="listen-label">הנגן שוב</span>
+    </button>
+  </div>
+
+  <div id="feedback-area">
+    <div id="melody-progress"></div>
+    <div id="rhythm-grid"></div>
+    <div id="fb-text"></div>
+  </div>
+
+  <div id="instrument">
+    <!-- Keyboard -->
+    <div id="keyboard">
+      <div class="key" data-i="0"><div class="key-solfege">דו</div><div class="key-name">C</div></div>
+      <div class="key" data-i="1"><div class="key-solfege">רה</div><div class="key-name">D</div></div>
+      <div class="key" data-i="2"><div class="key-solfege">מי</div><div class="key-name">E</div></div>
+      <div class="key" data-i="3"><div class="key-solfege">סול</div><div class="key-name">G</div></div>
+      <div class="key" data-i="4"><div class="key-solfege">לה</div><div class="key-name">A</div></div>
+      <div class="key" data-i="5"><div class="key-solfege">דו׳</div><div class="key-name">C5</div></div>
+    </div>
+
+    <!-- Rhythm pad -->
+    <div id="rhythm-pad-wrap">
+      <div id="rhythm-hint">הקש בקצב</div>
+      <div id="rhythm-pad"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════
+// AUDIO ENGINE — marimba-style tone
+// ══════════════════════════════════════════
+let ctx = null;
+
+function getCtx() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Build a tiny impulse reverb
+    buildReverb();
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+let reverbNode = null;
+
+function buildReverb() {
+  const sampleRate = ctx.sampleRate;
+  const len = sampleRate * 0.9;
+  const buf = ctx.createBuffer(2, len, sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const data = buf.getChannelData(c);
+    for (let i = 0; i < len; i++)
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.4);
+  }
+  reverbNode = ctx.createConvolver();
+  reverbNode.buffer = buf;
+  reverbNode.connect(ctx.destination);
+}
+
+// Piano / marimba: triangle + slight detuned sine, quick decay
+function playTone(freq, duration = 0.6, volume = 0.5, time = null) {
+  const ac = getCtx();
+  const t = time !== null ? time : ac.currentTime;
+
+  const osc1 = ac.createOscillator();
+  const osc2 = ac.createOscillator();
+  const osc3 = ac.createOscillator();
+  const gainMain = ac.createGain();
+  const gainRev = ac.createGain();
+
+  osc1.type = 'triangle';  osc1.frequency.value = freq;
+  osc2.type = 'sine';      osc2.frequency.value = freq * 2.002; // slight octave detuned
+  osc3.type = 'sine';      osc3.frequency.value = freq * 3.01;  // 3rd harmonic
+
+  gainMain.gain.setValueAtTime(0, t);
+  gainMain.gain.linearRampToValueAtTime(volume, t + 0.008);
+  gainMain.gain.exponentialRampToValueAtTime(volume * 0.6, t + 0.05);
+  gainMain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+  gainRev.gain.value = 0.07;
+
+  osc1.connect(gainMain); osc2.connect(gainMain); osc3.connect(gainMain);
+  gainMain.connect(ac.destination);
+  gainMain.connect(gainRev);
+  if (reverbNode) gainRev.connect(reverbNode);
+
+  osc1.start(t); osc1.stop(t + duration + 0.1);
+  osc2.start(t); osc2.stop(t + duration + 0.1);
+  osc3.start(t); osc3.stop(t + duration + 0.1);
+}
+
+function playMetro(accent = false, time = null) {
+  const ac = getCtx();
+  const t = time !== null ? time : ac.currentTime;
+  const freq = accent ? 880 : 660;
+  const buf = ac.createBuffer(1, ac.sampleRate * 0.04, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const env = Math.pow(1 - i / data.length, 3);
+    data[i] = (Math.random() * 2 - 1) * env * (accent ? 0.5 : 0.3);
+  }
+  const src = ac.createBufferSource();
+  const g = ac.createGain();
+  const filter = ac.createBiquadFilter();
+  filter.type = 'bandpass'; filter.frequency.value = freq; filter.Q.value = 3;
+  src.buffer = buf;
+  src.connect(filter); filter.connect(g); g.connect(ac.destination);
+  g.gain.value = 1;
+  src.start(t);
+}
+
+function playWin() {
+  [0, 2, 3, 5].forEach((ni, i) => {
+    const f = NOTES[ni].freq;
+    setTimeout(() => playTone(f, 0.5, 0.4), i * 100);
+  });
+}
+
+function playFail() {
+  const ac = getCtx();
+  [220, 180].forEach((f, i) => setTimeout(() => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.2, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.3);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + 0.35);
+  }, i * 150));
+}
+
+// ══════════════════════════════════════════
+// NOTE DATA  (pentatonic C major)
+// ══════════════════════════════════════════
+const NOTES = [
+  { i: 0, freq: 261.63, name: 'C',  sol: 'דו'  },
+  { i: 1, freq: 293.66, name: 'D',  sol: 'רה'  },
+  { i: 2, freq: 329.63, name: 'E',  sol: 'מי'  },
+  { i: 3, freq: 392.00, name: 'G',  sol: 'סול' },
+  { i: 4, freq: 440.00, name: 'A',  sol: 'לה'  },
+  { i: 5, freq: 523.25, name: 'C5', sol: 'דו׳' },
+];
+
+const keyEls = Array.from(document.querySelectorAll('.key'));
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+let score = 0;
+let streak = 0;
+let taskCount = 0;
+let level = 1;
+let currentTask = null;
+let gameOn = false;
+let taskTimerId = null;
+let listenCount = 0;
+
+const TOTAL_TASKS = 12;
+
+// ══════════════════════════════════════════
+// TASK GENERATORS
+// ══════════════════════════════════════════
+
+function pickNotes(n, allowRepeat = false) {
+  const pool = [...NOTES];
+  if (allowRepeat) {
+    return Array.from({ length: n }, () => pool[Math.floor(Math.random() * pool.length)]);
+  }
+  const shuffled = pool.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+// --- PITCH MATCH ---
+function makePitchTask() {
+  const note = NOTES[Math.floor(Math.random() * NOTES.length)];
+  return {
+    type: 'pitch',
+    typeName: 'מציאת צליל',
+    instruction: 'שמע את הצליל — מצא אותו על הקלידה',
+    targetNotes: [note],
+    progress: [],
+    timeLimit: 10000,
+    done: false,
+  };
+}
+
+// --- MELODY ECHO ---
+function makeMelodyTask() {
+  const len = level <= 3 ? 2 : level <= 6 ? 3 : level <= 9 ? 4 : 5;
+  const melody = pickNotes(len);
+  return {
+    type: 'melody',
+    typeName: 'חזרה על מנגינה',
+    instruction: 'שמע את המנגינה — חזור עליה בסדר',
+    targetNotes: melody,
+    progress: [],
+    timeLimit: 5000 + len * 3000,
+    done: false,
+  };
+}
+
+// --- INTERVAL DIRECTION ---
+function makeIntervalTask() {
+  const a = NOTES[Math.floor(Math.random() * (NOTES.length - 1))];
+  const b = NOTES[a.i + 1 + Math.floor(Math.random() * (NOTES.length - a.i - 1))];
+  const up = Math.random() > 0.5;
+  const note1 = up ? a : b;
+  const note2 = up ? b : a;
+  return {
+    type: 'interval',
+    typeName: 'כיוון תנועה',
+    instruction: 'הצליל השני — עלה ▲ או ירד ▼?',
+    note1, note2,
+    answer: up ? 'up' : 'down',
+    timeLimit: 9000,
+    done: false,
+  };
+}
+
+// --- RHYTHM ---
+function makeRhythmTask() {
+  const bpm = 80 + level * 4;
+  const beat = 60000 / bpm;
+  const patternLen = level <= 3 ? 4 : level <= 7 ? 6 : 8;
+  const density = level <= 3 ? 0.6 : level <= 6 ? 0.65 : 0.7;
+
+  const beats = Array.from({ length: patternLen }, (_, i) =>
+    i === 0 ? true : Math.random() < density
+  );
+
+  return {
+    type: 'rhythm',
+    typeName: 'חזרה על קצב',
+    instruction: 'שמע את הקצב — הקש אותו בחזרה',
+    beats,     // array of bool: which beats have notes
+    bpm,
+    beat,       // ms per beat
+    taps: [],   // { time, beatIndex } from user
+    timeLimit: 4000 + patternLen * (beat + 100),
+    done: false,
+  };
+}
+
+function pickTaskType() {
+  if (level <= 2) return 'pitch';
+  if (level === 3) return Math.random() < 0.6 ? 'pitch' : 'melody';
+  const r = Math.random();
+  if (level <= 5) return r < 0.35 ? 'pitch' : r < 0.65 ? 'melody' : 'rhythm';
+  if (level <= 8) return r < 0.25 ? 'pitch' : r < 0.5 ? 'melody' : r < 0.75 ? 'rhythm' : 'interval';
+  return ['pitch', 'melody', 'rhythm', 'interval'][Math.floor(Math.random() * 4)];
+}
+
+function makeTask() {
+  const type = pickTaskType();
+  if (type === 'pitch') return makePitchTask();
+  if (type === 'melody') return makeMelodyTask();
+  if (type === 'interval') return makeIntervalTask();
+  return makeRhythmTask();
+}
+
+// ══════════════════════════════════════════
+// PLAYBACK
+// ══════════════════════════════════════════
+let isPlaying = false;
+let playbackTimeout = null;
+
+function playTask(task, onDone) {
+  if (isPlaying) return;
+  clearTimeout(playbackTimeout);
+  isPlaying = true;
+  setListenPlaying(true);
+
+  if (task.type === 'pitch') {
+    const n = task.targetNotes[0];
+    highlightKey(n.i, 'playback', 600);
+    playTone(n.freq, 0.8, 0.45);
+    playbackTimeout = setTimeout(() => { isPlaying = false; setListenPlaying(false); if (onDone) onDone(); }, 900);
+  }
+
+  else if (task.type === 'melody') {
+    const gap = 500;
+    task.targetNotes.forEach((n, i) => {
+      playbackTimeout = setTimeout(() => {
+        highlightKey(n.i, 'playback', 420);
+        playTone(n.freq, 0.55, 0.42);
+        if (i === task.targetNotes.length - 1) {
+          setTimeout(() => { isPlaying = false; setListenPlaying(false); if (onDone) onDone(); }, 500);
+        }
+      }, i * gap);
+    });
+  }
+
+  else if (task.type === 'interval') {
+    const dur = 500;
+    playTone(task.note1.freq, 0.7, 0.4);
+    highlightKey(task.note1.i, 'playback', dur);
+    playbackTimeout = setTimeout(() => {
+      playTone(task.note2.freq, 0.7, 0.4);
+      highlightKey(task.note2.i, 'playback', dur);
+      setTimeout(() => { isPlaying = false; setListenPlaying(false); if (onDone) onDone(); }, 700);
+    }, 700);
+  }
+
+  else if (task.type === 'rhythm') {
+    playRhythmPattern(task, () => {
+      isPlaying = false; setListenPlaying(false); if (onDone) onDone();
+    });
+  }
+}
+
+let rhythmTimeouts = [];
+
+function playRhythmPattern(task, cb) {
+  rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
+  const baseNote = NOTES[2]; // Mi — neutral
+
+  task.beats.forEach((on, i) => {
+    const t = rhythmTimeouts.push(setTimeout(() => {
+      flashRhythmBeat(i, true);
+      if (on) {
+        playTone(baseNote.freq, 0.22, 0.38);
+        playMetro(i === 0);
+      } else {
+        playMetro(i === 0, undefined); // click on every beat for reference
+      }
+      setTimeout(() => flashRhythmBeat(i, false), 200);
+    }, i * task.beat));
+  });
+
+  const totalTime = task.beats.length * task.beat + 300;
+  rhythmTimeouts.push(setTimeout(() => cb && cb(), totalTime));
+}
+
+// ══════════════════════════════════════════
+// TASK LIFECYCLE
+// ══════════════════════════════════════════
+
+function startTask() {
+  clearTimeout(taskTimerId);
+  rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
+
+  currentTask = makeTask();
+  listenCount = 0;
+  taskCount++;
+  if (taskCount % 4 === 0) level++;
+
+  renderTask(currentTask);
+
+  // Always auto-play first
+  setTimeout(() => {
+    playTask(currentTask, () => {
+      if (currentTask.type === 'rhythm') {
+        showRhythmInput(currentTask);
+      }
+      beginTimer(currentTask.timeLimit);
+    });
+  }, 400);
+}
+
+function renderTask(task) {
+  document.getElementById('task-type').textContent = task.typeName;
+  document.getElementById('task-instruction').textContent = task.instruction;
+
+  // Hide/show elements
+  document.getElementById('melody-progress').innerHTML = '';
+  document.getElementById('rhythm-grid').innerHTML = '';
+  setFb('', '');
+
+  const keyWrap = document.getElementById('keyboard');
+  const rhythmWrap = document.getElementById('rhythm-pad-wrap');
+
+  if (task.type === 'rhythm') {
+    keyWrap.style.display = 'none';
+    rhythmWrap.classList.remove('visible');
+    document.getElementById('listen-btn').classList.remove('hidden');
+
+    // Build rhythm grid
+    const rg = document.getElementById('rhythm-grid');
+    task.beats.forEach((on, i) => {
+      const d = document.createElement('div');
+      d.className = 'r-beat' + (on ? ' beat-on' : ' beat-off') + (i === 0 ? ' strong' : '');
+      d.dataset.bi = i;
+      rg.appendChild(d);
+    });
+
+  } else if (task.type === 'interval') {
+    keyWrap.style.display = 'flex';
+    rhythmWrap.classList.remove('visible');
+    document.getElementById('listen-btn').classList.remove('hidden');
+
+    // Show Up/Down buttons instead of full keyboard
+    renderIntervalUI(task);
+
+  } else {
+    keyWrap.style.display = 'flex';
+    rhythmWrap.classList.remove('visible');
+    document.getElementById('listen-btn').classList.remove('hidden');
+
+    if (task.type === 'melody') {
+      renderMelodyDots(task);
+    }
+  }
+}
+
+function renderIntervalUI(task) {
+  // Repurpose keyboard area with 2 big answer buttons
+  const keyWrap = document.getElementById('keyboard');
+  keyWrap.innerHTML = '';
+  keyWrap.style.gap = '16px';
+
+  ['up', 'down'].forEach(dir => {
+    const btn = document.createElement('div');
+    btn.className = 'key';
+    btn.dataset.dir = dir;
+    btn.style.fontSize = '32px';
+    btn.style.justifyContent = 'center';
+    btn.style.gap = '10px';
+    btn.innerHTML = `
+      <div style="font-size:34px;pointer-events:none">${dir === 'up' ? '▲' : '▼'}</div>
+      <div class="key-solfege" style="pointer-events:none">${dir === 'up' ? 'עלה' : 'ירד'}</div>
+    `;
+    keyWrap.appendChild(btn);
+
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (!gameOn || !currentTask || currentTask.done) return;
+      btn.classList.add('pressed');
+      const correct = dir === task.answer;
+      currentTask.done = true;
+      clearTimeout(taskTimerId);
+      if (correct) {
+        btn.classList.add('correct');
+        setFb('✓ נכון!', 'ok');
+        onSuccess();
+      } else {
+        btn.classList.add('wrong');
+        // Show the other button as correct
+        Array.from(keyWrap.children).forEach(b => {
+          if (b.dataset.dir === task.answer) b.classList.add('correct');
+        });
+        setFb('✗ טעות', 'fail');
+        onFail();
+      }
+      setTimeout(() => {
+        btn.classList.remove('pressed', 'correct', 'wrong');
+        Array.from(keyWrap.children).forEach(b => b.classList.remove('correct', 'wrong'));
+      }, 900);
+    });
+
+    btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+  });
+}
+
+function renderMelodyDots(task) {
+  const mp = document.getElementById('melody-progress');
+  mp.innerHTML = '';
+  task.targetNotes.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'mp-dot pending';
+    d.dataset.di = i;
+    mp.appendChild(d);
+  });
+  updateMelodyDot(0, 'current');
+}
+
+function updateMelodyDot(idx, state) {
+  const dots = document.querySelectorAll('.mp-dot');
+  dots.forEach((d, i) => {
+    if (i === idx) d.className = 'mp-dot ' + state;
+  });
+}
+
+function showRhythmInput(task) {
+  const rhythmWrap = document.getElementById('rhythm-pad-wrap');
+  rhythmWrap.classList.add('visible');
+  task.taps = [];
+  task.recordStart = Date.now();
+}
+
+function flashRhythmBeat(i, on) {
+  const d = document.querySelector(`.r-beat[data-bi="${i}"]`);
+  if (!d) return;
+  if (on) d.classList.add('active-play');
+  else d.classList.remove('active-play');
+}
+
+function beginTimer(ms) {
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${ms}ms linear`;
+    bar.style.width = '0%';
+  });
+  clearTimeout(taskTimerId);
+  taskTimerId = setTimeout(onTimeout, ms);
+}
+
+function stopTimer() {
+  clearTimeout(taskTimerId);
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+}
+
+// ══════════════════════════════════════════
+// INPUT HANDLING
+// ══════════════════════════════════════════
+
+// KEY presses
+document.getElementById('keyboard').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!gameOn || !currentTask || currentTask.done) return;
+  const key = e.target.closest('.key');
+  if (!key || key.dataset.dir) return; // interval buttons handled separately
+  const i = +key.dataset.i;
+  if (isNaN(i)) return;
+
+  const note = NOTES[i];
+  playTone(note.freq, 0.5, 0.42);
+  key.classList.add('pressed');
+
+  if (currentTask.type === 'pitch') evalPitch(i, key);
+  else if (currentTask.type === 'melody') evalMelody(i, key);
+});
+
+document.getElementById('keyboard').addEventListener('pointerup', e => {
+  const key = e.target.closest?.('.key');
+  if (key) key.classList.remove('pressed');
+});
+
+document.getElementById('keyboard').addEventListener('pointerleave', e => {
+  const key = e.target.closest?.('.key');
+  if (key) key.classList.remove('pressed');
+});
+
+// RHYTHM tap
+const rhythmPad = document.getElementById('rhythm-pad');
+rhythmPad.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!gameOn || !currentTask || currentTask.type !== 'rhythm' || currentTask.done) return;
+  const task = currentTask;
+  rhythmPad.classList.add('tapped');
+  const elapsed = Date.now() - task.recordStart;
+  task.taps.push(elapsed);
+  playMetro(task.taps.length === 1);
+  // Visual on grid
+  const beatIdx = Math.round(elapsed / task.beat);
+  if (beatIdx < task.beats.length) {
+    const d = document.querySelector(`.r-beat[data-bi="${beatIdx}"]`);
+    if (d) {
+      d.classList.add('tap-hit');
+      setTimeout(() => d.classList.remove('tap-hit'), 200);
+    }
+  }
+  setTimeout(() => rhythmPad.classList.remove('tapped'), 150);
+});
+
+rhythmPad.addEventListener('pointerup', () => rhythmPad.classList.remove('tapped'));
+
+// LISTEN button
+document.getElementById('listen-btn').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!gameOn || isPlaying || !currentTask) return;
+  listenCount++;
+  playTask(currentTask, () => {
+    if (currentTask && currentTask.type === 'rhythm' && listenCount <= 2) {
+      showRhythmInput(currentTask);
+    }
+  });
+});
+
+// ══════════════════════════════════════════
+// EVALUATION
+// ══════════════════════════════════════════
+
+function evalPitch(noteIdx, keyEl) {
+  const task = currentTask;
+  const target = task.targetNotes[0].i;
+
+  if (noteIdx === target) {
+    keyEl.classList.add('correct');
+    setTimeout(() => keyEl.classList.remove('correct'), 700);
+    setFb('✓ נכון!', 'ok');
+    task.done = true;
+    stopTimer();
+    onSuccess();
+  } else {
+    keyEl.classList.add('wrong');
+    setTimeout(() => keyEl.classList.remove('wrong'), 400);
+    setFb('✗ נסה שוב', 'fail');
+    setTimeout(() => setFb('', ''), 700);
+    // Penalize a bit
+    score = Math.max(0, score - 5);
+    updateScore();
+  }
+}
+
+function evalMelody(noteIdx, keyEl) {
+  const task = currentTask;
+  const expected = task.targetNotes[task.progress.length].i;
+
+  if (noteIdx === expected) {
+    keyEl.classList.add('correct');
+    setTimeout(() => keyEl.classList.remove('correct'), 600);
+    updateMelodyDot(task.progress.length, 'hit');
+    task.progress.push(noteIdx);
+
+    if (task.progress.length === task.targetNotes.length) {
+      setFb('✓ מושלם!', 'ok');
+      task.done = true;
+      stopTimer();
+      onSuccess();
+    } else {
+      updateMelodyDot(task.progress.length, 'current');
+      setFb(`${task.progress.length}/${task.targetNotes.length}`, 'info');
+    }
+  } else {
+    keyEl.classList.add('wrong');
+    setTimeout(() => keyEl.classList.remove('wrong'), 400);
+    updateMelodyDot(task.progress.length, 'miss');
+    setFb('✗ טעות — חזור', 'fail');
+    task.progress = [];
+    setTimeout(() => {
+      renderMelodyDots(task);
+      setFb('', '');
+    }, 700);
+    score = Math.max(0, score - 8);
+    updateScore();
+  }
+}
+
+function evalRhythm(task) {
+  // Compare user taps to target beats
+  const targetOnBeats = [];
+  task.beats.forEach((on, i) => { if (on) targetOnBeats.push(i * task.beat); });
+
+  if (task.taps.length === 0) {
+    setFb('לא הוקש כלום', 'fail');
+    onFail(); return;
+  }
+
+  let hits = 0;
+  const tolerance = task.beat * 0.38;
+
+  const used = new Set();
+  targetOnBeats.forEach(targetT => {
+    let best = Infinity, bestTap = -1;
+    task.taps.forEach((tapT, ti) => {
+      if (used.has(ti)) return;
+      const diff = Math.abs(tapT - targetT);
+      if (diff < best) { best = diff; bestTap = ti; }
+    });
+    if (bestTap >= 0 && best <= tolerance) {
+      hits++;
+      used.add(bestTap);
+    }
+  });
+
+  const pct = Math.round((hits / targetOnBeats.length) * 100);
+  task.done = true;
+  stopTimer();
+
+  if (pct >= 70) {
+    setFb(`✓ ${pct}% דיוק!`, 'ok');
+    onSuccess(pct / 100);
+  } else if (pct >= 40) {
+    setFb(`${pct}% — כמעט!`, 'fail');
+    onFail(true);
+  } else {
+    setFb(`${pct}% — נסה שוב`, 'fail');
+    onFail(false);
+  }
+}
+
+// Rhythm task ends: evaluate after timer or when done button is pressed
+// We trigger evaluation when rhythm record window closes
+function finishRhythmRecording() {
+  if (!currentTask || currentTask.type !== 'rhythm' || currentTask.done) return;
+  evalRhythm(currentTask);
+}
+
+// ══════════════════════════════════════════
+// SUCCESS / FAIL / TIMEOUT
+// ══════════════════════════════════════════
+
+function onSuccess(multiplier = 1) {
+  const basePoints = 100 + level * 15;
+  const pts = Math.round(basePoints * multiplier);
+  score += pts;
+  streak++;
+  updateScore();
+  playWin();
+  disableInput();
+  setFb(document.getElementById('fb-text').textContent || `+${pts}`, 'ok');
+  nextTask(1400);
+}
+
+function onFail(partial = false) {
+  if (!partial) playFail();
+  streak = 0;
+  updateScore();
+  disableInput();
+  nextTask(1500);
+}
+
+function onTimeout() {
+  if (!currentTask || currentTask.done) return;
+  if (currentTask.type === 'rhythm' && document.getElementById('rhythm-pad-wrap').classList.contains('visible')) {
+    finishRhythmRecording();
+  } else {
+    currentTask.done = true;
+    setFb('⏱ נגמר הזמן', 'fail');
+    onFail(false);
+  }
+}
+
+function nextTask(delay) {
+  if (taskCount >= TOTAL_TASKS) {
+    setTimeout(endGame, delay);
+    return;
+  }
+  setTimeout(startTask, delay);
+}
+
+function disableInput() {
+  gameOn = false;
+  setTimeout(() => { gameOn = true; }, 200); // brief lockout
+}
+
+// ══════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════
+
+function highlightKey(noteIdx, cls, ms) {
+  const el = keyEls[noteIdx];
+  if (!el) return;
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), ms);
+}
+
+function setFb(text, cls) {
+  const el = document.getElementById('fb-text');
+  el.textContent = text;
+  el.className = cls ? `ok fail info`.includes(cls) ? cls : '' : '';
+  if (cls) el.className = cls;
+}
+
+function setListenPlaying(on) {
+  const btn = document.getElementById('listen-btn');
+  const icon = btn.querySelector('.listen-icon');
+  btn.classList.toggle('playing', on);
+  icon.textContent = on ? '■' : '▶';
+  document.getElementById('listen-label').textContent = on ? 'מנגן...' : 'שמע שוב';
+}
+
+function updateScore() {
+  document.getElementById('score').textContent = score;
+  const el = document.getElementById('streak');
+  el.textContent = streak >= 3 ? `🔥 ${streak}` : '';
+}
+
+// ══════════════════════════════════════════
+// GAME START / END
+// ══════════════════════════════════════════
+
+function startGame() {
+  score = 0; streak = 0; taskCount = 0; level = 1;
+  updateScore();
+  gameOn = true;
+  startTask();
+}
+
+function endGame() {
+  gameOn = false;
+  document.getElementById('end-score').textContent = score;
+  const el = document.getElementById('end');
+  el.classList.add('show');
+
+  let msg = '';
+  if (score > 1200) msg = 'אוזן מוזיקלית מעולה!';
+  else if (score > 800) msg = 'כישרון אמיתי — תמשיך לאמן!';
+  else msg = 'ממשיך לאמן את האוזן 🎵';
+  document.getElementById('end-stats').textContent = msg;
+}
+
+// Start button
+document.getElementById('start-btn').addEventListener('click', () => {
+  getCtx();
+  const s = document.getElementById('start');
+  s.classList.add('hidden');
+  setTimeout(() => s.style.display = 'none', 450);
+  setTimeout(startGame, 300);
+});
+
+// Restart
+document.getElementById('restart-btn').addEventListener('click', () => {
+  document.getElementById('end').classList.remove('show');
+  // Rebuild keyboard
+  const kw = document.getElementById('keyboard');
+  kw.innerHTML = NOTES.map(n => `<div class="key" data-i="${n.i}"><div class="key-solfege">${n.sol}</div><div class="key-name">${n.name}</div></div>`).join('');
+  kw.style.gap = '7px';
+  kw.style.display = 'flex';
+  startGame();
+});
+
+</script>
+</body>
+</html>
