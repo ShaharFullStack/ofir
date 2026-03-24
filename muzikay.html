@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>מוזיקאי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #07070d;
+  --surface: #0e0e18;
+  --text: #dde0f0;
+  --dim: #42445a;
+
+  --c0: #00e676; /* emerald */
+  --c1: #40c4ff; /* sapphire */
+  --c2: #ffab40; /* amber */
+  --c3: #ff5252; /* ruby */
+  --c4: #e040fb; /* violet */
+  --c5: #64ffda; /* teal */
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* SCREEN FLASH */
+#flash {
+  position: fixed; inset: 0; pointer-events: none; z-index: 90;
+  opacity: 0;
+  transition: opacity 0.06s;
+}
+
+/* GRAIN OVERLAY */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ─── LAYOUT ─── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+}
+
+/* ─── HEADER ─── */
+#header {
+  padding: 14px 18px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+#title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+#title span { font-size: 22px; }
+
+#score {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c2);
+  text-shadow: 0 0 18px rgba(255,171,64,0.5);
+  letter-spacing: 1px;
+}
+
+/* ─── TIMER BAR ─── */
+#timer-track {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+#timer-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--c2);
+  transform-origin: right;
+  transition: width linear;
+  box-shadow: 0 0 8px var(--c2);
+}
+
+/* ─── TASK AREA ─── */
+#task-area {
+  flex-shrink: 0;
+  padding: 10px 18px 8px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+#task-chip {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 3px 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+}
+
+#task-text {
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.35;
+  color: var(--text);
+  white-space: pre-line;
+}
+
+#dots {
+  display: flex;
+  gap: 7px;
+  margin-top: 3px;
+  height: 12px;
+  align-items: center;
+}
+
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.25s, transform 0.25s;
+}
+
+.dot.lit {
+  transform: scale(1.25);
+}
+
+/* ─── VISUALIZER ─── */
+#viz {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.viz-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  background: rgba(255,255,255,0.06);
+  height: 4px;
+  transition: height 0.05s, background 0.1s;
+  transform-origin: bottom;
+}
+
+/* ─── PAD GRID ─── */
+#grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 6px 14px 18px;
+}
+
+.pad {
+  border-radius: 22px;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.07s, box-shadow 0.12s, border-color 0.12s;
+  will-change: transform;
+}
+
+.pad-icon {
+  font-size: 26px;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.1s;
+}
+
+.pad-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  transition: color 0.1s;
+}
+
+/* Ripple */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-out 0.55s ease-out forwards;
+  pointer-events: none;
+  opacity: 0.25;
+}
+@keyframes ripple-out {
+  to { transform: scale(5); opacity: 0; }
+}
+
+/* Hold ring */
+.hold-ring {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: currentColor;
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── PAD COLORS ─── */
+.pad[data-i="0"] {
+  background: rgba(0,230,118,0.07);
+  border-color: rgba(0,230,118,0.18);
+}
+.pad[data-i="0"] .pad-label { color: var(--c0); }
+.pad[data-i="0"] .hold-ring { color: var(--c0); }
+.pad[data-i="0"].active {
+  background: var(--c0);
+  box-shadow: 0 0 0 2px var(--c0), 0 0 50px rgba(0,230,118,0.45);
+  transform: scale(0.95);
+  border-color: var(--c0);
+}
+.pad[data-i="0"].active .pad-label { color: #021a0d; }
+.pad[data-i="0"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="0"] .ripple { background: var(--c0); }
+.pad[data-i="0"].hint-glow { box-shadow: 0 0 0 3px var(--c0), 0 0 30px rgba(0,230,118,0.4); }
+
+.pad[data-i="1"] {
+  background: rgba(64,196,255,0.07);
+  border-color: rgba(64,196,255,0.18);
+}
+.pad[data-i="1"] .pad-label { color: var(--c1); }
+.pad[data-i="1"] .hold-ring { color: var(--c1); }
+.pad[data-i="1"].active {
+  background: var(--c1);
+  box-shadow: 0 0 0 2px var(--c1), 0 0 50px rgba(64,196,255,0.45);
+  transform: scale(0.95);
+  border-color: var(--c1);
+}
+.pad[data-i="1"].active .pad-label { color: #011a26; }
+.pad[data-i="1"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="1"] .ripple { background: var(--c1); }
+.pad[data-i="1"].hint-glow { box-shadow: 0 0 0 3px var(--c1), 0 0 30px rgba(64,196,255,0.4); }
+
+.pad[data-i="2"] {
+  background: rgba(255,171,64,0.07);
+  border-color: rgba(255,171,64,0.18);
+}
+.pad[data-i="2"] .pad-label { color: var(--c2); }
+.pad[data-i="2"] .hold-ring { color: var(--c2); }
+.pad[data-i="2"].active {
+  background: var(--c2);
+  box-shadow: 0 0 0 2px var(--c2), 0 0 50px rgba(255,171,64,0.45);
+  transform: scale(0.95);
+  border-color: var(--c2);
+}
+.pad[data-i="2"].active .pad-label { color: #1a0d00; }
+.pad[data-i="2"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="2"] .ripple { background: var(--c2); }
+.pad[data-i="2"].hint-glow { box-shadow: 0 0 0 3px var(--c2), 0 0 30px rgba(255,171,64,0.4); }
+
+.pad[data-i="3"] {
+  background: rgba(255,82,82,0.07);
+  border-color: rgba(255,82,82,0.18);
+}
+.pad[data-i="3"] .pad-label { color: var(--c3); }
+.pad[data-i="3"] .hold-ring { color: var(--c3); }
+.pad[data-i="3"].active {
+  background: var(--c3);
+  box-shadow: 0 0 0 2px var(--c3), 0 0 50px rgba(255,82,82,0.45);
+  transform: scale(0.95);
+  border-color: var(--c3);
+}
+.pad[data-i="3"].active .pad-label { color: #1a0000; }
+.pad[data-i="3"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="3"] .ripple { background: var(--c3); }
+.pad[data-i="3"].hint-glow { box-shadow: 0 0 0 3px var(--c3), 0 0 30px rgba(255,82,82,0.4); }
+
+.pad[data-i="4"] {
+  background: rgba(224,64,251,0.07);
+  border-color: rgba(224,64,251,0.18);
+}
+.pad[data-i="4"] .pad-label { color: var(--c4); }
+.pad[data-i="4"] .hold-ring { color: var(--c4); }
+.pad[data-i="4"].active {
+  background: var(--c4);
+  box-shadow: 0 0 0 2px var(--c4), 0 0 50px rgba(224,64,251,0.45);
+  transform: scale(0.95);
+  border-color: var(--c4);
+}
+.pad[data-i="4"].active .pad-label { color: #150020; }
+.pad[data-i="4"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="4"] .ripple { background: var(--c4); }
+.pad[data-i="4"].hint-glow { box-shadow: 0 0 0 3px var(--c4), 0 0 30px rgba(224,64,251,0.4); }
+
+.pad[data-i="5"] {
+  background: rgba(100,255,218,0.07);
+  border-color: rgba(100,255,218,0.18);
+}
+.pad[data-i="5"] .pad-label { color: var(--c5); }
+.pad[data-i="5"] .hold-ring { color: var(--c5); }
+.pad[data-i="5"].active {
+  background: var(--c5);
+  box-shadow: 0 0 0 2px var(--c5), 0 0 50px rgba(100,255,218,0.45);
+  transform: scale(0.95);
+  border-color: var(--c5);
+}
+.pad[data-i="5"].active .pad-label { color: #001a14; }
+.pad[data-i="5"].active .pad-icon { transform: scale(0.9); }
+.pad[data-i="5"] .ripple { background: var(--c5); }
+.pad[data-i="5"].hint-glow { box-shadow: 0 0 0 3px var(--c5), 0 0 30px rgba(100,255,218,0.4); }
+
+.pad.disabled {
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* ─── FEEDBACK ─── */
+#feedback {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  z-index: 80; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s;
+}
+#feedback.show { opacity: 1; }
+#fb-emoji { font-size: 70px; }
+#fb-text {
+  font-size: 30px; font-weight: 900;
+  text-shadow: 0 2px 20px currentColor;
+}
+#feedback.ok #fb-text { color: var(--c0); }
+#feedback.fail #fb-text { color: var(--c3); }
+
+/* ─── START SCREEN ─── */
+#start {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px; padding: 36px;
+  z-index: 200;
+  transition: opacity 0.4s;
+}
+#start.hidden { opacity: 0; pointer-events: none; }
+
+.start-dots {
+  display: flex; gap: 8px; margin-bottom: 6px;
+}
+.sdot {
+  width: 28px; height: 28px; border-radius: 7px;
+  animation: sdot-dance 1.4s infinite;
+}
+.sdot:nth-child(1) { background: var(--c0); animation-delay: 0s; }
+.sdot:nth-child(2) { background: var(--c1); animation-delay: 0.12s; }
+.sdot:nth-child(3) { background: var(--c2); animation-delay: 0.24s; }
+.sdot:nth-child(4) { background: var(--c3); animation-delay: 0.36s; }
+.sdot:nth-child(5) { background: var(--c4); animation-delay: 0.48s; }
+.sdot:nth-child(6) { background: var(--c5); animation-delay: 0.60s; }
+
+@keyframes sdot-dance {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+}
+
+#start h1 {
+  font-size: 46px; font-weight: 900;
+  text-align: center; line-height: 1.1;
+}
+
+#start p {
+  font-size: 15px; color: #7a7a99;
+  text-align: center; line-height: 1.7;
+  max-width: 270px;
+}
+
+#start-btn {
+  margin-top: 8px;
+  padding: 16px 52px;
+  background: var(--c2);
+  color: #100800;
+  border: none; border-radius: 50px;
+  font-family: 'Noto Sans Hebrew', sans-serif;
+  font-size: 20px; font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(255,171,64,0.5);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+#start-btn:active { transform: scale(0.94); box-shadow: 0 0 20px rgba(255,171,64,0.3); }
+
+.level-badge {
+  position: absolute;
+  top: 14px; left: 18px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+}
+
+</style>
+</head>
+<body>
+
+<!-- Screen color flash -->
+<div id="flash"></div>
+
+<!-- Start Screen -->
+<div id="start">
+  <div class="start-dots">
+    <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+    <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+  </div>
+  <h1>🎵 מוזיקאי</h1>
+  <p>גע בלוחות הצבעוניים כדי לנגן צלילים.<br>בצע את המשימות וצבור ניקוד.</p>
+  <button id="start-btn">התחל לנגן ▶</button>
+</div>
+
+<!-- Game -->
+<div id="app">
+  <div id="header">
+    <div id="title"><span>🎵</span> מוזיקאי</div>
+    <div id="score">000</div>
+  </div>
+  <div id="timer-track"><div id="timer-fill"></div></div>
+  <div id="task-area">
+    <div id="task-chip">משימה</div>
+    <div id="task-text">מתחיל...</div>
+    <div id="dots"></div>
+  </div>
+  <div id="viz">
+    <!-- filled by JS -->
+  </div>
+  <div id="grid">
+    <div class="pad" data-i="0"><div class="pad-icon">🌿</div><div class="pad-label">ירוק</div><div class="hold-ring"></div></div>
+    <div class="pad" data-i="1"><div class="pad-icon">💎</div><div class="pad-label">כחול</div><div class="hold-ring"></div></div>
+    <div class="pad" data-i="2"><div class="pad-icon">🔥</div><div class="pad-label">כתום</div><div class="hold-ring"></div></div>
+    <div class="pad" data-i="3"><div class="pad-icon">🌹</div><div class="pad-label">אדום</div><div class="hold-ring"></div></div>
+    <div class="pad" data-i="4"><div class="pad-icon">🔮</div><div class="pad-label">סגול</div><div class="hold-ring"></div></div>
+    <div class="pad" data-i="5"><div class="pad-icon">🌊</div><div class="pad-label">טורקיז</div><div class="hold-ring"></div></div>
+  </div>
+</div>
+
+<!-- Feedback overlay -->
+<div id="feedback">
+  <div id="fb-emoji"></div>
+  <div id="fb-text"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════
+let ctx = null;
+
+function getCtx() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  return ctx;
+}
+
+function playNote(freq, dur = 0.55) {
+  const ac = getCtx();
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  const osc2 = ac.createOscillator(); // harmonic
+  const g2 = ac.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  osc2.type = 'sine';
+  osc2.frequency.value = freq * 2;
+  g2.gain.value = 0.06;
+
+  gain.gain.setValueAtTime(0, ac.currentTime);
+  gain.gain.linearRampToValueAtTime(0.42, ac.currentTime + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+
+  osc.connect(gain); gain.connect(ac.destination);
+  osc2.connect(g2); g2.connect(ac.destination);
+  osc.start(ac.currentTime); osc.stop(ac.currentTime + dur);
+  osc2.start(ac.currentTime); osc2.stop(ac.currentTime + dur);
+  triggerViz(freq);
+}
+
+// Sustained tone for hold tasks
+let holdOsc = null, holdGain = null;
+
+function startSustain(freq) {
+  stopSustain();
+  const ac = getCtx();
+  holdOsc = ac.createOscillator();
+  holdGain = ac.createGain();
+  holdOsc.type = 'sine';
+  holdOsc.frequency.value = freq;
+  holdGain.gain.setValueAtTime(0, ac.currentTime);
+  holdGain.gain.linearRampToValueAtTime(0.4, ac.currentTime + 0.025);
+  holdOsc.connect(holdGain); holdGain.connect(ac.destination);
+  holdOsc.start();
+  triggerViz(freq);
+}
+
+function stopSustain() {
+  if (!holdOsc) return;
+  holdGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.06);
+  holdOsc.stop(ctx.currentTime + 0.06);
+  holdOsc = null; holdGain = null;
+}
+
+function playWin() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+    setTimeout(() => playNote(f, 0.35), i * 100));
+}
+
+function playLose() {
+  const ac = getCtx();
+  [220, 185].forEach((f, i) => setTimeout(() => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.25, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
+    o.connect(g); g.connect(ac.destination);
+    o.start(ac.currentTime); o.stop(ac.currentTime + 0.4);
+  }, i * 140));
+}
+
+// ═══════════════════════════════════════
+// VISUALIZER
+// ═══════════════════════════════════════
+const vizEl = document.getElementById('viz');
+const N_BARS = 20;
+const vizBars = [];
+
+for (let i = 0; i < N_BARS; i++) {
+  const b = document.createElement('div');
+  b.className = 'viz-bar';
+  vizEl.appendChild(b);
+  vizBars.push(b);
+}
+
+let vizEnergy = new Array(N_BARS).fill(0);
+let vizColor = 'rgba(255,255,255,0.08)';
+let vizAnimId = null;
+
+function triggerViz(freq) {
+  // Map freq to center bar
+  const minF = 261, maxF = 1047;
+  const center = Math.round(((freq - minF) / (maxF - minF)) * (N_BARS - 1));
+  for (let i = 0; i < N_BARS; i++) {
+    const dist = Math.abs(i - center);
+    vizEnergy[i] = Math.max(vizEnergy[i], Math.max(0, 1 - dist * 0.22));
+  }
+}
+
+function animViz() {
+  for (let i = 0; i < N_BARS; i++) {
+    vizEnergy[i] *= 0.84;
+    const h = 4 + vizEnergy[i] * 24;
+    vizBars[i].style.height = h + 'px';
+    vizBars[i].style.background = vizEnergy[i] > 0.1 ? vizColor : 'rgba(255,255,255,0.06)';
+  }
+  requestAnimationFrame(animViz);
+}
+animViz();
+
+// ═══════════════════════════════════════
+// PAD DATA
+// ═══════════════════════════════════════
+const PADS = [
+  { i: 0, freq: 261.63, name: 'ירוק',   color: '#00e676', rgb: '0,230,118' },
+  { i: 1, freq: 293.66, name: 'כחול',   color: '#40c4ff', rgb: '64,196,255' },
+  { i: 2, freq: 329.63, name: 'כתום',   color: '#ffab40', rgb: '255,171,64' },
+  { i: 3, freq: 392.00, name: 'אדום',   color: '#ff5252', rgb: '255,82,82' },
+  { i: 4, freq: 440.00, name: 'סגול',   color: '#e040fb', rgb: '224,64,251' },
+  { i: 5, freq: 523.25, name: 'טורקיז', color: '#64ffda', rgb: '100,255,218' },
+];
+
+const padEls = Array.from(document.querySelectorAll('.pad'));
+
+// ═══════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════
+let score = 0;
+let level = 1;
+let tasksTotal = 0;
+let task = null;
+let gameOn = false;
+let taskTimer = null;
+let timerStartAt = 0;
+let timerMs = 0;
+let holdTimer = null;
+let holdPad = -1;
+let holdStart = 0;
+
+// ═══════════════════════════════════════
+// TASK SYSTEM
+// ═══════════════════════════════════════
+
+function rPad(exclude = []) {
+  const avail = PADS.filter(p => !exclude.includes(p.i));
+  return avail[Math.floor(Math.random() * avail.length)];
+}
+
+function makeTask() {
+  const type = pickType();
+  if (type === 'single') {
+    const p = rPad();
+    return { type, target: [p.i], progress: [], time: 6500,
+      text: `נגן את הצליל ה${p.name} 🎵` };
+  }
+  if (type === 'sequence') {
+    const len = level < 5 ? 2 : level < 9 ? 3 : 4;
+    const pads = []; for (let i = 0; i < len; i++) pads.push(rPad(pads.map(p=>p.i)));
+    const sep = ' → ';
+    return { type, target: pads.map(p=>p.i), progress: [], time: 3500 + len * 2500,
+      text: `נגן בסדר:\n${pads.map(p=>p.name).join(sep)}` };
+  }
+  if (type === 'hold') {
+    const p = rPad();
+    return { type, holdPad: p.i, holdMs: 1800, time: 8000,
+      text: `החזק את הצליל ה${p.name}\n1.8 שניות ⏳` };
+  }
+  if (type === 'simon') {
+    const len = level < 10 ? 3 : 4;
+    const pads = []; for (let i = 0; i < len; i++) pads.push(rPad([]));
+    return { type, target: pads.map(p=>p.i), progress: [], phase: 'demo',
+      time: 6000 + len * 2800, text: `שים לב לסדר... 👀` };
+  }
+  if (type === 'any') {
+    const count = Math.min(4 + Math.floor(level / 4), 6);
+    return { type, count, played: new Set(), time: 14000,
+      text: `נגן ${count} צלילים שונים 🌈` };
+  }
+}
+
+function pickType() {
+  const r = Math.random();
+  if (level <= 2) return 'single';
+  if (level <= 4) return r < 0.55 ? 'single' : 'sequence';
+  if (level <= 7) {
+    if (r < 0.25) return 'single';
+    if (r < 0.55) return 'sequence';
+    if (r < 0.75) return 'hold';
+    return 'any';
+  }
+  if (r < 0.15) return 'single';
+  if (r < 0.35) return 'sequence';
+  if (r < 0.5)  return 'hold';
+  if (r < 0.72) return 'simon';
+  return 'any';
+}
+
+// ═══════════════════════════════════════
+// TASK LIFECYCLE
+// ═══════════════════════════════════════
+function startTask() {
+  task = makeTask();
+  clearTimers();
+  setTaskText(task.text);
+
+  if (task.type === 'simon') {
+    disablePads(true);
+    setTimeout(() => runSimonDemo(), 600);
+  } else {
+    disablePads(false);
+    updateDots(task);
+    beginTimer(task.time);
+  }
+}
+
+async function runSimonDemo() {
+  for (const padId of task.target) {
+    await flashPad(padId, 550);
+    await wait(180);
+  }
+  await wait(300);
+  task.phase = 'record';
+  setTaskText(`עכשיו חזור על הסדר!\n(${task.target.length} צלילים)`);
+  disablePads(false);
+  updateDots(task);
+  beginTimer(task.time);
+}
+
+function flashPad(padId, ms) {
+  return new Promise(res => {
+    const el = padEls[padId];
+    const p = PADS[padId];
+    playNote(p.freq, ms / 1000);
+    el.classList.add('active');
+    flashScreen(p.rgb, 0.08);
+    vizColor = p.color;
+    setTimeout(() => { el.classList.remove('active'); res(); }, ms);
+  });
+}
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function beginTimer(ms) {
+  timerMs = ms; timerStartAt = Date.now();
+  const fill = document.getElementById('timer-fill');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(() => {
+    fill.style.transition = `width ${ms}ms linear`;
+    fill.style.width = '0%';
+  });
+  taskTimer = setTimeout(onFail, ms);
+}
+
+function clearTimers() {
+  clearTimeout(taskTimer);
+  clearTimeout(holdTimer);
+  holdTimer = null; holdPad = -1;
+  stopSustain();
+}
+
+// ═══════════════════════════════════════
+// INPUT EVALUATION
+// ═══════════════════════════════════════
+function onPadDown(padId) {
+  if (!gameOn || !task) return;
+  const p = PADS[padId];
+  const el = padEls[padId];
+
+  // Visual + sound
+  el.classList.add('active');
+  addRipple(el, p);
+  flashScreen(p.rgb, 0.1);
+  vizColor = p.color;
+
+  if (task.type === 'hold') {
+    if (padId === task.holdPad) {
+      startSustain(p.freq);
+      triggerViz(p.freq);
+      showHoldRing(el, task.holdMs);
+      holdPad = padId; holdStart = Date.now();
+      holdTimer = setTimeout(() => onSuccess(), task.holdMs);
+    }
+    return;
+  }
+
+  playNote(p.freq);
+  evaluate(padId);
+}
+
+function onPadUp(padId) {
+  const el = padEls[padId];
+  el.classList.remove('active');
+  if (task && task.type === 'hold' && padId === task.holdPad) {
+    stopSustain();
+    clearTimeout(holdTimer); holdTimer = null;
+    hideHoldRing(el);
+    holdPad = -1;
+  }
+}
+
+function evaluate(padId) {
+  if (task.type === 'single') {
+    padId === task.target[0] ? onSuccess() : wrongFlash(padId);
+  }
+  else if (task.type === 'sequence' || (task.type === 'simon' && task.phase === 'record')) {
+    const expected = task.target[task.progress.length];
+    if (padId === expected) {
+      task.progress.push(padId);
+      updateDots(task);
+      if (task.progress.length === task.target.length) onSuccess();
+    } else {
+      task.progress = [];
+      updateDots(task);
+      wrongFlash(padId);
+      if (task.type === 'simon') { onFail(); return; }
+    }
+  }
+  else if (task.type === 'any') {
+    task.played.add(padId);
+    updateDots(task);
+    if (task.played.size >= task.count) onSuccess();
+  }
+}
+
+// ═══════════════════════════════════════
+// SUCCESS / FAIL
+// ═══════════════════════════════════════
+function onSuccess() {
+  clearTimers();
+  const elapsed = Date.now() - timerStartAt;
+  const bonus = Math.max(10, Math.round(100 - elapsed / 100 * 0.8));
+  score += bonus;
+  updateScore();
+  playWin();
+  disablePads(true);
+  padEls.forEach(e => e.classList.remove('active'));
+  showFeedback(true, `+${bonus}`);
+  tasksTotal++;
+  if (tasksTotal % 3 === 0) level++;
+  setTimeout(() => { hideFeedback(); startTask(); }, 1300);
+}
+
+function onFail() {
+  clearTimers();
+  playLose();
+  disablePads(true);
+  padEls.forEach(e => { e.classList.remove('active'); hideHoldRing(e); });
+  showFeedback(false, 'נסה שוב!');
+  setTimeout(() => { hideFeedback(); startTask(); }, 1300);
+}
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function setTaskText(t) {
+  document.getElementById('task-text').textContent = t;
+}
+
+function updateScore() {
+  document.getElementById('score').textContent = String(score).padStart(3, '0');
+}
+
+function disablePads(off) {
+  padEls.forEach(e => e.classList.toggle('disabled', off));
+}
+
+function addRipple(el, p) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  const s = Math.min(el.offsetWidth, el.offsetHeight) * 0.5;
+  Object.assign(r.style, {
+    width: s + 'px', height: s + 'px',
+    left: '50%', top: '50%',
+    marginLeft: -s/2 + 'px', marginTop: -s/2 + 'px',
+  });
+  el.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+function wrongFlash(padId) {
+  const el = padEls[padId];
+  el.style.outline = '3px solid rgba(255,82,82,0.9)';
+  setTimeout(() => el.style.outline = '', 300);
+}
+
+function flashScreen(rgb, alpha) {
+  const f = document.getElementById('flash');
+  f.style.background = `rgba(${rgb},${alpha})`;
+  f.style.opacity = '1';
+  setTimeout(() => f.style.opacity = '0', 80);
+}
+
+function showHoldRing(el, ms) {
+  const ring = el.querySelector('.hold-ring');
+  ring.style.opacity = '1';
+  ring.style.animation = `ring-spin ${ms}ms linear infinite`;
+}
+
+function hideHoldRing(el) {
+  const ring = el.querySelector('.hold-ring');
+  ring.style.opacity = '0';
+  ring.style.animation = 'none';
+}
+
+function updateDots(task) {
+  const container = document.getElementById('dots');
+  container.innerHTML = '';
+  const colors = PADS.map(p => p.color);
+
+  let total, filled, dotColors = null;
+
+  if (task.type === 'single') {
+    total = 1; filled = task.progress ? task.progress.length : 0;
+  } else if (task.type === 'sequence') {
+    total = task.target.length; filled = task.progress.length;
+    dotColors = task.target.map(i => colors[i]);
+  } else if (task.type === 'simon' && task.phase === 'record') {
+    total = task.target.length; filled = task.progress.length;
+    dotColors = task.target.map(i => colors[i]);
+  } else if (task.type === 'hold') {
+    total = 1; filled = 0;
+  } else if (task.type === 'any') {
+    total = task.count; filled = task.played.size;
+  } else {
+    total = 0; filled = 0;
+  }
+
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < filled ? ' lit' : '');
+    if (i < filled && dotColors) d.style.background = dotColors[i];
+    else if (i < filled) d.style.background = '#ffab40';
+    else if (dotColors) d.style.background = `${dotColors[i]}33`;
+    container.appendChild(d);
+  }
+}
+
+function showFeedback(ok, txt) {
+  const el = document.getElementById('feedback');
+  document.getElementById('fb-emoji').textContent = ok ? '✨' : '💫';
+  document.getElementById('fb-text').textContent = txt;
+  el.className = 'feedback show ' + (ok ? 'ok' : 'fail');
+}
+
+function hideFeedback() {
+  document.getElementById('feedback').className = 'feedback';
+}
+
+// ═══════════════════════════════════════
+// TOUCH / MOUSE EVENTS
+// ═══════════════════════════════════════
+const grid = document.getElementById('grid');
+
+grid.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const el = document.elementFromPoint(t.clientX, t.clientY)?.closest('.pad');
+    if (el) onPadDown(+el.dataset.i);
+  }
+}, { passive: false });
+
+grid.addEventListener('touchend', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    const el = document.elementFromPoint(t.clientX, t.clientY)?.closest('.pad');
+    if (el) onPadUp(+el.dataset.i);
+    else if (holdPad >= 0) onPadUp(holdPad);
+  }
+}, { passive: false });
+
+grid.addEventListener('touchcancel', e => {
+  for (const t of e.changedTouches) {
+    const el = document.elementFromPoint(t.clientX, t.clientY)?.closest('.pad');
+    if (el) onPadUp(+el.dataset.i);
+    else if (holdPad >= 0) onPadUp(holdPad);
+  }
+}, { passive: false });
+
+// Mouse fallback
+grid.addEventListener('mousedown', e => {
+  const el = e.target.closest('.pad');
+  if (el) onPadDown(+el.dataset.i);
+});
+document.addEventListener('mouseup', e => {
+  const el = e.target.closest?.('.pad');
+  if (el) onPadUp(+el.dataset.i);
+  else if (holdPad >= 0) onPadUp(holdPad);
+});
+
+// ═══════════════════════════════════════
+// START
+// ═══════════════════════════════════════
+document.getElementById('start-btn').addEventListener('click', () => {
+  getCtx(); // unlock audio
+  const s = document.getElementById('start');
+  s.classList.add('hidden');
+  setTimeout(() => { s.style.display = 'none'; }, 450);
+  gameOn = true;
+  setTimeout(startTask, 300);
+});
+</script>
+</body>
+</html>
