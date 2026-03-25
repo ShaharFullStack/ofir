@@ -30,7 +30,8 @@
         html, body {
             width: 100%;
             height: 100%;
-            background: var(--bg);
+            background: var(--bg) url('music_bg_1774431375976.png') no-repeat center center fixed;
+            background-size: cover;
             color: var(--text);
             font-family: 'Noto Sans Hebrew', sans-serif;
             overflow: hidden;
@@ -171,6 +172,13 @@
             font-size: 1.5em;
         }
 
+        .game-img-icon {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
         .game-text {
             flex: 1;
         }
@@ -247,12 +255,11 @@
     <div class="container">
         <div class="header">
             <h1>אופיר משחקים מוזיקליים</h1>
-            <p>בחר משחק להתחיל</p>
         </div>
 
         <div class="menu">
             <a href="muzikay.html" class="game-button btn1">
-                <span class="game-icon">🎸</span>
+                <img src="assets//images/guitar_icon_1774431322339.png" class="game-img-icon" alt="🎸">
                 <span class="game-text">
                     <span>נגן הצבעים</span>
                     <span class="game-label">התאמת צבע לצליל, קצב, גובה ומשך צליל</span>
@@ -260,7 +267,7 @@
             </a>
 
             <a href="muzikay1.html" class="game-button btn2">
-                <span class="game-icon">🎯</span>
+                <img src="assets//images/target_icon_1774431338130.png" class="game-img-icon" alt="🎯">
                 <span class="game-text">
                     <span>תפוס ת'צבע</span>
                     <span class="game-label">מהירות תגובה ודיוק</span>
@@ -268,7 +275,7 @@
             </a>
 
             <a href="muzikay2.html" class="game-button btn3">
-                <span class="game-icon">👂</span>
+                <img src="assets//images/ear_icon.png" class="game-img-icon" alt="👂">
                 <span class="game-text">
                     <span>1 אוזן מוזיקלית</span>
                     <span class="game-label">זיהוי תווים לפיתוח שמיעה עם עקומת למידה נוחה</span>
@@ -276,7 +283,7 @@
             </a>
 
             <a href="muzikay3.html" class="game-button btn3">
-                <span class="game-icon">👂</span>
+                <img src="assets//images/ear_icon2.png" class="game-img-icon" alt="👂">
                 <span class="game-text">
                     <span>אוזן מוזיקלית 2</span>
                     <span class="game-label">זיהוי תווים לפיתוח שמיעה עם עקומת למידה נוחה</span>
