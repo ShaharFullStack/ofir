@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <title>אופיר משחקים מוזיקליים</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -57,13 +58,14 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
             z-index: 10;
+            overflow-y: auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: clamp(16px, 5vh, 60px);
             animation: fadeIn 0.6s ease-out;
         }
 
@@ -224,6 +226,20 @@
             .menu {
                 max-width: 100%;
             }
+        }
+
+        /* Landscape / compact height */
+        @media (max-height: 580px) {
+            .header h1 { font-size: 1.6em; }
+            .header p  { font-size: 0.85em; }
+            .header    { margin-bottom: 12px; }
+            .menu      { gap: 10px; }
+            .game-button {
+                padding: 10px 18px;
+                min-height: 44px;
+                font-size: 0.95em;
+            }
+            .game-label { display: none; }
         }
     </style>
 </head>

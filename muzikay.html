@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>נגן הצבעים</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
@@ -435,6 +436,26 @@ body::after {
   font-size: 10px; font-weight: 700;
   letter-spacing: 1.5px;
   color: var(--dim);
+}
+
+/* ── RESPONSIVE ── */
+#header {
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
+}
+#grid { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+
+@media (max-height: 580px) {
+  #header { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: 6px; }
+  #task-area { min-height: 64px; padding: 6px 18px 4px; gap: 3px; }
+  #task-text { font-size: 16px; }
+  #viz { height: 18px; }
+  #grid { gap: 6px; padding-top: 4px; }
+}
+
+@media (max-width: 360px) {
+  #task-text { font-size: 16px; }
 }
 
 </style>

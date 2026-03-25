@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>שירה בצבעים</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;900&family=Fredoka+One&display=swap" rel="stylesheet">
 <style>
@@ -488,6 +489,31 @@ html, body {
 }
 #levelup h2 { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--c2); }
 #levelup p  { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+/* ── RESPONSIVE ── */
+#start h1 { font-size: clamp(30px, 8vw, 48px); }
+.start-bounce { font-size: clamp(44px, 12vw, 64px); }
+#header {
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
+}
+#grid { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+
+@media (max-height: 640px) {
+  #start { gap: 14px; padding: 24px; }
+  #start h1 { font-size: 26px; }
+  .start-bounce { font-size: 38px; }
+  .mode-row { padding: 8px 14px; font-size: 13px; }
+  .start-btn { padding: 12px 30px; font-size: 16px; }
+  #header { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: 6px; }
+  #grid { gap: 6px; padding-top: 4px; }
+}
+
+@media (max-width: 360px) {
+  #start h1 { font-size: 24px; }
+  .start-modes { max-width: 260px; }
+}
 
 </style>
 </head>
