@@ -1,308 +1,500 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <title>אופיר משחקים מוזיקליים</title>
-    <meta name="description" content="אופיר משחקים מוזיקליים - אוסף משחקים חינוכיים לפיתוח שמיעה מוזיקלית, תרגול קצב וזיהוי תווים. שחקו עכשיו ותהנו מחוויות מוזיקליות אינטראקטיביות מרתקות.">
-    <meta name="keywords" content="משחקים מוזיקליים, פיתוח שמיעה מוזיקלית, זיהוי תווים, נגן הצבעים, תפוס ת'צבע, אוזן מוזיקלית, חינוך מוזיקלי">
-    <meta name="author" content="אופיר משחקים">
-    <meta property="og:title" content="אופיר משחקים מוזיקליים">
-    <meta property="og:description" content="אוסף משחקים לפיתוח שמיעה מוזיקלית, זיהוי קצב ותווים.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/images/music_bg_1774431375976.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="אופיר משחקים מוזיקליים">
-    <meta name="twitter:description" content="אוסף משחקים לפיתוח שמיעה מוזיקלית, זיהוי קצב ותווים.">
-    <meta name="twitter:image" content="assets/images/music_bg_1774431375976.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
-        :root {
-            --bg: #07070d;
-            --surface: #0e0e18;
-            --text: #dde0f0;
-            --dim: #42445a;
-            --c0: #00e676;
-            --c1: #40c4ff;
-            --c2: #ffab40;
-            --c3: #ff5252;
-            --c4: #e040fb;
-            --c5: #64ffda;
-        }
+  <title>אופיר משחקים מוזיקליים</title>
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: var(--bg) url('music_bg_1774431375976.png') no-repeat center center fixed;
-            background-size: cover;
-            color: var(--text);
-            font-family: 'Noto Sans Hebrew', sans-serif;
-            overflow: hidden;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta
+    name="description"
+    content="אופיר משחקים מוזיקליים. אוסף משחקים חינוכיים לפיתוח שמיעה מוזיקלית, תרגול קצב וזיהוי תווים."
+  />
+  <meta
+    name="keywords"
+    content="משחקים מוזיקליים, פיתוח שמיעה מוזיקלית, זיהוי תווים, נגן הצבעים, תפוס תצבע, אוזן מוזיקלית, חינוך מוזיקלי"
+  />
+  <meta name="author" content="אופיר משחקים" />
 
-        /* GRAIN OVERLAY */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            opacity: 0.025;
-            pointer-events: none;
-            z-index: 1;
-        }
+  <meta property="og:title" content="אופיר משחקים מוזיקליים" />
+  <meta
+    property="og:description"
+    content="אוסף משחקים לפיתוח שמיעה מוזיקלית, זיהוי קצב ותווים."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/images/music_bg_1774431375976.png" />
 
-        .container {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
-            z-index: 10;
-            overflow-y: auto;
-        }
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="אופיר משחקים מוזיקליים" />
+  <meta
+    name="twitter:description"
+    content="אוסף משחקים לפיתוח שמיעה מוזיקלית, זיהוי קצב ותווים."
+  />
+  <meta name="twitter:image" content="assets/images/music_bg_1774431375976.png" />
 
-        .header {
-            text-align: center;
-            margin-bottom: clamp(16px, 5vh, 60px);
-            animation: fadeIn 0.6s ease-out;
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700;900&display=swap"
+    rel="stylesheet"
+  />
 
-        .header h1 {
-            font-size: 3em;
-            font-weight: 900;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--c0), var(--c1), var(--c2), var(--c4));
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 4s ease infinite;
-        }
+  <style>
+    :root {
+      --bg: #07070d;
+      --surface: rgba(14, 14, 24, 0.82);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text: #dde0f0;
+      --muted: #aeb4d0;
+      --dim: #5f647e;
+      --c0: #00e676;
+      --c1: #40c4ff;
+      --c2: #ffab40;
+      --c3: #ff5252;
+      --c4: #e040fb;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --container-width: 460px;
+    }
 
-        .header p {
-            font-size: 1.1em;
-            color: var(--dim);
-            font-weight: 300;
-        }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-            max-width: 350px;
-            animation: slideUp 0.8s ease-out;
-        }
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+    }
 
-        .game-button {
-            position: relative;
-            padding: 25px 30px;
-            border: 2px solid var(--dim);
-            background: var(--surface);
-            color: var(--text);
-            font-size: 1.3em;
-            font-weight: 700;
-            text-decoration: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            text-align: center;
-            overflow: hidden;
-            font-family: 'Noto Sans Hebrew', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            min-height: 70px;
-        }
+    body {
+      font-family: "Noto Sans Hebrew", sans-serif;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(7, 7, 13, 0.58), rgba(7, 7, 13, 0.78)),
+        url("music_bg_1774431375976.png");
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        .game-button::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
 
-        .game-button:hover {
-            border-color: var(--text);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding:
+        max(20px, env(safe-area-inset-top))
+        16px
+        max(20px, env(safe-area-inset-bottom));
+    }
 
-        .game-button:active {
-            transform: translateY(0);
-        }
+    .panel {
+      width: 100%;
+      max-width: var(--container-width);
+      padding: 28px 20px 20px;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
 
-        .game-button.btn1 {
-            border-color: var(--c0);
-            color: var(--c0);
-        }
+    .hero {
+      text-align: center;
+      margin-bottom: 22px;
+      animation: fade-in 0.55s ease-out both;
+    }
 
-        .game-button.btn1:hover {
-            background: rgba(0, 230, 118, 0.1);
-            box-shadow: 0 0 20px rgba(0, 230, 118, 0.3), inset 0 0 20px rgba(0, 230, 118, 0.05);
-        }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(
+        135deg,
+        var(--c0),
+        var(--c1),
+        var(--c2),
+        var(--c4)
+      );
+      background-size: 250% 250%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradient-shift 5s ease infinite;
+    }
 
-        .game-button.btn2 {
-            border-color: var(--c1);
-            color: var(--c1);
-        }
+    .hero p {
+      margin: 12px 0 0;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--muted);
+      font-weight: 300;
+    }
 
-        .game-button.btn2:hover {
-            background: rgba(64, 196, 255, 0.1);
-            box-shadow: 0 0 20px rgba(64, 196, 255, 0.3), inset 0 0 20px rgba(64, 196, 255, 0.05);
-        }
+    .games {
+      display: grid;
+      gap: 14px;
+      animation: slide-up 0.75s ease-out both;
+    }
 
-        .game-button.btn3 {
-            border-color: var(--c4);
-            color: var(--c4);
-        }
+    .game-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 16px;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease,
+        box-shadow 0.22s ease;
+      min-height: 88px;
+    }
 
-        .game-button.btn3:hover {
-            background: rgba(224, 64, 251, 0.1);
-            box-shadow: 0 0 20px rgba(224, 64, 251, 0.3), inset 0 0 20px rgba(224, 64, 251, 0.05);
-        }
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.08),
+        rgba(255, 255, 255, 0)
+      );
+    }
 
-        .game-icon {
-            font-size: 1.5em;
-        }
+    .game-card:hover,
+    .game-card:focus-visible {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.05);
+      outline: none;
+    }
 
-        .game-img-icon {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-        }
+    .game-card:hover::before,
+    .game-card:focus-visible::before {
+      opacity: 1;
+    }
 
-        .game-text {
-            flex: 1;
-        }
+    .game-card:focus-visible {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+    }
 
-        .game-label {
-            display: block;
-            font-size: 0.8em;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
+    .game-card.theme-green {
+      border-color: rgba(0, 230, 118, 0.35);
+    }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+    .game-card.theme-green:hover,
+    .game-card.theme-green:focus-visible {
+      border-color: var(--c0);
+      box-shadow: 0 10px 28px rgba(0, 230, 118, 0.14);
+    }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    .game-card.theme-blue {
+      border-color: rgba(64, 196, 255, 0.35);
+    }
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
+    .game-card.theme-blue:hover,
+    .game-card.theme-blue:focus-visible {
+      border-color: var(--c1);
+      box-shadow: 0 10px 28px rgba(64, 196, 255, 0.14);
+    }
 
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            .header h1 {
-                font-size: 2.2em;
-            }
+    .game-card.theme-purple {
+      border-color: rgba(224, 64, 251, 0.35);
+    }
 
-            .header p {
-                font-size: 0.95em;
-            }
+    .game-card.theme-purple:hover,
+    .game-card.theme-purple:focus-visible {
+      border-color: var(--c4);
+      box-shadow: 0 10px 28px rgba(224, 64, 251, 0.14);
+    }
 
-            .game-button {
-                padding: 20px 25px;
-                font-size: 1.1em;
-                min-height: 60px;
-            }
+    .game-icon-wrap {
+      flex: 0 0 54px;
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+    }
 
-            .menu {
-                max-width: 100%;
-            }
-        }
+    .game-icon {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+    }
 
-        /* Landscape / compact height */
-        @media (max-height: 580px) {
-            .header h1 { font-size: 1.6em; }
-            .header p  { font-size: 0.85em; }
-            .header    { margin-bottom: 12px; }
-            .menu      { gap: 10px; }
-            .game-button {
-                padding: 10px 18px;
-                min-height: 44px;
-                font-size: 0.95em;
-            }
-            .game-label { display: none; }
-        }
-    </style>
+    .game-content {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .game-title {
+      display: block;
+      font-size: 1.08rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .game-description {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .game-arrow {
+      flex: 0 0 auto;
+      font-size: 1.15rem;
+      color: var(--dim);
+      transform: translateX(0);
+      transition: transform 0.22s ease, color 0.22s ease;
+    }
+
+    .game-card:hover .game-arrow,
+    .game-card:focus-visible .game-arrow {
+      color: var(--text);
+      transform: translateX(-4px);
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes gradient-shift {
+      0%,
+      100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .panel {
+        padding: 22px 14px 14px;
+        border-radius: 20px;
+      }
+
+      .hero p {
+        font-size: 0.94rem;
+      }
+
+      .game-card {
+        padding: 16px 14px;
+        min-height: 82px;
+      }
+
+      .game-icon-wrap {
+        width: 48px;
+        height: 48px;
+      }
+
+      .game-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      .game-title {
+        font-size: 1rem;
+      }
+
+      .game-description {
+        font-size: 0.84rem;
+      }
+    }
+
+    @media (max-height: 620px) {
+      .page {
+        align-items: start;
+      }
+
+      .panel {
+        margin-top: 12px;
+      }
+
+      .hero {
+        margin-bottom: 16px;
+      }
+
+      .hero h1 {
+        font-size: 1.75rem;
+      }
+
+      .hero p {
+        font-size: 0.88rem;
+        margin-top: 8px;
+      }
+
+      .games {
+        gap: 10px;
+      }
+
+      .game-card {
+        min-height: 68px;
+        padding: 12px 14px;
+      }
+
+      .game-description {
+        display: none;
+      }
+
+      .game-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+      }
+
+      .game-icon {
+        width: 28px;
+        height: 28px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>אופיר משחקים מוזיקליים</h1>
-        </div>
+  <main class="page">
+    <section class="panel" aria-labelledby="main-title">
+      <header class="hero">
+        <h1 id="main-title">אופיר משחקים מוזיקליים</h1>
+        <p>משחקים חינוכיים לפיתוח שמיעה, קצב, דיוק ומהירות תגובה</p>
+      </header>
 
-        <div class="menu">
-            <a href="muzikay.html" class="game-button btn1">
-                <img src="assets//images/guitar_icon_1774431322339.png" class="game-img-icon" alt="🎸">
-                <span class="game-text">
-                    <span>נגן הצבעים</span>
-                    <span class="game-label">התאמת צבע לצליל, קצב, גובה ומשך צליל</span>
-                </span>
-            </a>
+      <nav class="games" aria-label="רשימת משחקים">
+        <a href="muzikay.html" class="game-card theme-green">
+          <span class="game-icon-wrap" aria-hidden="true">
+            <img
+              src="assets/images/guitar_icon_1774431322339.png"
+              alt=""
+              class="game-icon"
+            />
+          </span>
 
-            <a href="muzikay1.html" class="game-button btn2">
-                <img src="assets//images/target_icon_1774431338130.png" class="game-img-icon" alt="🎯">
-                <span class="game-text">
-                    <span>תפוס ת'צבע</span>
-                    <span class="game-label">מהירות תגובה ודיוק</span>
-                </span>
-            </a>
+          <span class="game-content">
+            <span class="game-title">נגן הצבעים</span>
+            <span class="game-description">
+              התאמת צבע לצליל, קצב, גובה ומשך צליל
+            </span>
+          </span>
 
-            <a href="muzikay2.html" class="game-button btn3">
-                <img src="assets//images/ear_icon.png" class="game-img-icon" alt="👂">
-                <span class="game-text">
-                    <span>1 אוזן מוזיקלית</span>
-                    <span class="game-label">זיהוי תווים לפיתוח שמיעה עם עקומת למידה נוחה</span>
-                </span>
-            </a>
+          <span class="game-arrow" aria-hidden="true">‹</span>
+        </a>
 
-            <a href="muzikay3.html" class="game-button btn3">
-                <img src="assets//images/ear_icon2.png" class="game-img-icon" alt="👂">
-                <span class="game-text">
-                    <span>אוזן מוזיקלית 2</span>
-                    <span class="game-label">זיהוי תווים לפיתוח שמיעה עם עקומת למידה נוחה</span>
-                </span>
-            </a>
-        </div>
-    </div>
+        <a href="muzikay1.html" class="game-card theme-blue">
+          <span class="game-icon-wrap" aria-hidden="true">
+            <img
+              src="assets/images/target_icon_1774431338130.png"
+              alt=""
+              class="game-icon"
+            />
+          </span>
 
-    <script src="hamburger-menu.js"></script>
+          <span class="game-content">
+            <span class="game-title">תפוס ת׳צבע</span>
+            <span class="game-description">
+              תרגול מהירות תגובה, תזמון ודיוק
+            </span>
+          </span>
+
+          <span class="game-arrow" aria-hidden="true">‹</span>
+        </a>
+
+        <a href="muzikay2.html" class="game-card theme-purple">
+          <span class="game-icon-wrap" aria-hidden="true">
+            <img
+              src="assets/images/ear_icon.png"
+              alt=""
+              class="game-icon"
+            />
+          </span>
+
+          <span class="game-content">
+            <span class="game-title">אוזן מוזיקלית 1</span>
+            <span class="game-description">
+              זיהוי תווים לפיתוח שמיעה עם עקומת למידה נוחה
+            </span>
+          </span>
+
+          <span class="game-arrow" aria-hidden="true">‹</span>
+        </a>
+
+        <a href="muzikay3.html" class="game-card theme-purple">
+          <span class="game-icon-wrap" aria-hidden="true">
+            <img
+              src="assets/images/ear_icon2.png"
+              alt=""
+              class="game-icon"
+            />
+          </span>
+
+          <span class="game-content">
+            <span class="game-title">אוזן מוזיקלית 2</span>
+            <span class="game-description">
+              זיהוי תווים מתקדם יותר לפיתוח שמיעה מוזיקלית
+            </span>
+          </span>
+
+          <span class="game-arrow" aria-hidden="true">‹</span>
+        </a>
+      </nav>
+    </section>
+  </main>
+
+  <script src="hamburger-menu.js"></script>
 </body>
 </html>
